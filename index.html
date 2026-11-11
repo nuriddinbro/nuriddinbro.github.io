@@ -18,7 +18,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Exo+2:ital,wght@0,700;0,800;1,700;1,800&family=Onest:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="site.css?v=12">
+<link rel="stylesheet" href="site.css?v=13">
 <script>document.documentElement.classList.add("js");</script>
 </head>
 <body>
@@ -309,16 +309,29 @@
 
 <footer class="footer">
   <div class="wrap footer-in">
-    <p>© 2026 <span data-i18n="hero_name">Нуриддин Ахмедов</span></p>
+    <p>© 2026 · by <b class="by">West</b></p>
     <a href="#top" data-i18n="to_top">Наверх ↑</a>
   </div>
 </footer>
 
+<!-- Плавающая панель: наверх / к контактам -->
+<nav class="dock" id="dock" aria-label="Быстрая навигация">
+  <a href="#top" class="dock-btn">
+    <svg class="dock-ring" viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="22"/><circle cx="24" cy="24" r="22" id="dockRing"/></svg>
+    <svg class="dock-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 19V5M6 11l6-6 6 6"/></svg>
+    <span class="dock-tip" data-i18n="dock_top">Наверх</span>
+  </a>
+  <a href="#contacts" class="dock-btn dock-accent">
+    <svg class="dock-ic" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg>
+    <span class="dock-tip" data-i18n="dock_ct">Контакты</span>
+  </a>
+</nav>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/lenis@1.1.13/dist/lenis.min.js"></script>
-<script src="bg.js?v=12"></script>
-<script src="script.js?v=12"></script>
-<script src="fx.js?v=12"></script>
+<script src="bg.js?v=13"></script>
+<script src="script.js?v=13"></script>
+<script src="fx.js?v=13"></script>
 </body>
 </html>

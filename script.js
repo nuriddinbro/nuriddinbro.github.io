@@ -145,7 +145,9 @@ const EN = {
   ct_lead: "Open to interesting opportunities. Send me a message and I will reply within a day.",
   ct_email: "Email",
   ct_tg: "Telegram",
-  to_top: "Back to top ↑"
+  to_top: "Back to top ↑",
+  dock_top: "Back to top",
+  dock_ct: "Contact"
 };
 
 const META = {

@@ -11,6 +11,12 @@
     const p = Math.round(max > 0 ? (scrollY / max) * 100 : 0);
     progressEl.textContent = p + "%";
     document.querySelector(".topbar").style.setProperty("--p", p + "%");
+    // Плавающая панель видна, как только начали прокручивать
+    const dock = document.getElementById("dock");
+    if (dock) {
+      dock.classList.toggle("show", scrollY > 300);
+      document.getElementById("dockRing").style.strokeDashoffset = 138.2 * (1 - p / 100);
+    }
   }
   addEventListener("scroll", updateProgress, { passive: true });
   updateProgress();
