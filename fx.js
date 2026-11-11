@@ -133,6 +133,17 @@
     scrollTrigger: { trigger: "#timeline", start: "top 70%", end: "bottom 60%", scrub: true }
   });
 
+  // Полоски языков заполняются сегментами, проценты считаются
+  gsap.to(".langs b", {
+    scaleX: 1, duration: 1.4, ease: "power3.out", stagger: .15,
+    scrollTrigger: { trigger: ".langs", start: "top 85%" }
+  });
+  document.querySelectorAll(".lcount").forEach((el, i) => {
+    gsap.fromTo(el, { textContent: 0 }, {
+      textContent: +el.dataset.to, duration: 1.4, delay: i * .15, ease: "power3.out", snap: { textContent: 1 },
+      scrollTrigger: { trigger: ".langs", start: "top 85%" }
+    });
+  });
   // На телефоне приветствие показывается по нажатию
   document.querySelectorAll(".lng").forEach(li => li.addEventListener("click", () => li.classList.toggle("hi")));
   // Кольца языков заполняются до своего уровня
