@@ -121,8 +121,15 @@
   });
 
   // Линия таймлайна рисуется при прокрутке
+  const fill = document.getElementById("tlFill");
+  const jobs = [...document.querySelectorAll(".job")];
   gsap.to("#tlFill", {
     height: "100%", ease: "none",
+    // Когда линия доходит до ромбика - он загорается зеленым
+    onUpdate: () => {
+      const bottom = fill.parentElement.offsetTop + fill.offsetHeight;
+      jobs.forEach(j => j.classList.toggle("lit", bottom >= j.offsetTop + 14));
+    },
     scrollTrigger: { trigger: "#timeline", start: "top 70%", end: "bottom 60%", scrub: true }
   });
 
