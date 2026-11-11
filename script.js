@@ -9,6 +9,15 @@ const EN = {
   hero_loc: "Tashkent, Uzbekistan · open to remote work",
   hero_name: "Nuriddin Akhmedov",
   hero_role: "Customer Service Quality Assurance Specialist",
+  h_l1: "Service",
+  h_l2: "quality",
+  h_l3: "under control",
+  stat_langs: "languages",
+  pf_soon: "soon",
+  ct_h1: "Let's",
+  ct_h2: "work",
+  ct_h3: "together",
+  to_top: "Back to top ↑",
   hero_lead: "Quality assurance, content moderation, Russian - Uzbek translation, data and spreadsheet work, technical support.",
   hero_contact: "Get in touch",
   hero_resume: "Download CV (PDF)",
@@ -87,9 +96,9 @@ const EN = {
   l_en: "English", l_en_l: "elementary, A2",
   edu_title: "Education",
   edu1_t: "Tashkent Professional College of Communications",
-  edu1_d: "Telecommunications, 2014",
+  edu1_d: "Telecommunications",
   edu2_t: "ilmuz course",
-  edu2_d: "System administration, 2026",
+  edu2_d: "System administration",
 
   ct_title: "Contact",
   ct_lead: "Open to remote opportunities. Send me a message and I will reply within one business day.",
@@ -119,6 +128,7 @@ function setLang(lang) {
     b.setAttribute("aria-pressed", String(b.dataset.setLang === lang));
   });
   try { localStorage.setItem("lang", lang); } catch (e) {}
+  document.dispatchEvent(new CustomEvent("langchange", { detail: lang }));
 }
 
 document.querySelectorAll("[data-set-lang]").forEach(b => {
