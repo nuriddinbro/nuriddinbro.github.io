@@ -101,7 +101,14 @@
   });
 
   // Заголовок "Давайте работать вместе"
-  gsap.fromTo(".cta .line > span", LINE_FROM, { ...LINE_TO, stagger: .14, scrollTrigger: { trigger: ".cta", start: "top 85%" } });
+  // "Давайте работать вместе." - строки плавно проявляются слева направо, затем светится линия
+  const cta = document.querySelector(".cta");
+  const ctaBar = document.createElement("span"); ctaBar.className = "cta-bar"; cta.appendChild(ctaBar);
+  gsap.timeline({ scrollTrigger: { trigger: cta, start: "top 80%" } })
+    .fromTo(".cta .line > span",
+      { opacity: 0, clipPath: "inset(0 100% 0 0)", x: -20, filter: "blur(6px)" },
+      { opacity: 1, clipPath: "inset(0 0% 0 0)", x: 0, filter: "blur(0px)", duration: 1.6, ease: "power3.inOut", stagger: .35, clearProps: "filter,clipPath" })
+    .fromTo(ctaBar, { width: 0, opacity: 0 }, { width: "min(260px, 50%)", opacity: 1, duration: 1.2, ease: "power2.out" }, "-=.6");
 
   // Слова "О себе" загораются по мере прокрутки
   let wordsTween;
