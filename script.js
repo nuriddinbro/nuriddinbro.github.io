@@ -6,29 +6,24 @@ const EN = {
   nav_portfolio: "Portfolio",
   nav_contacts: "Contact",
 
-  hero_loc: "Tashkent, Uzbekistan · open to remote work",
+  hero_loc: "Tashkent, Uzbekistan · remote and freelance",
   hero_name: "Nuriddin Akhmedov",
-  hero_role: "9+ years in customer service",
+  hero_role: "Customer Experience & Service Quality Specialist",
   h_l1: "Making",
   h_l2: "service",
   h_l3: "better",
-  stat_langs: "languages",
-  pf_soon: "soon",
-  ct_h1: "Let's",
-  ct_h2: "work",
-  ct_h3: "together",
-  to_top: "Back to top ↑",
-  hero_lead: "Quality assurance, content moderation, Russian - Uzbek translation, data and spreadsheet work, technical support.",
+  hero_lead: "I help companies build service that customers value: from the first inquiry to standards, team training and quality control.",
   hero_contact: "Get in touch",
-  hero_resume: "Download CV (PDF)",
-  resume_soon: "A PDF version of my CV will be available here soon.",
+  cv_ru: "CV RU",
+  cv_en: "CV EN",
   stat_years: "years in customer service",
   stat_companies: "companies",
   stat_lang: "translation and localization",
+  stat_langs: "languages",
 
   about_title: "About",
-  about_p1: "Over 9 years in customer service: technical support, complex cases, team leadership, content moderation, translation and quality assurance. I have grown from operator to call center manager and currently work at Yandex Eats.",
-  about_p2: "Open to interesting remote opportunities: quality assurance, content moderation, Russian - Uzbek translation, data and spreadsheet work, technical support.",
+  about_p1: "Over 9 years in customer service across telecom, fintech, e-commerce and delivery companies. I have grown from operator to call center manager: resolving complex cases, launching a team from scratch, implementing service standards, moderating content and localizing customer communications. Today I am responsible for service quality at Yandex Eats.",
+  about_p2: "Open to interesting opportunities: remote work and freelance.",
 
   exp_title: "Core expertise",
   ex1_t: "Quality audits",
@@ -47,32 +42,59 @@ const EN = {
   job_title: "Work experience",
   j1_when: "February 2024 - present",
   j1_role: "Quality Assurance Specialist",
-  j1_d: "Reviewing and scoring agents' chats and calls with customers, partners (restaurants and stores) and couriers; evaluating against the quality scorecard and knowledge base; analyzing errors and providing feedback and recommendations; checking orders in the admin panel and CRM; translating response templates (macros) from Russian into Uzbek.",
+  j1_d: "Auditing chats and calls with customers, partners and couriers against the quality scorecard and knowledge base. Error analysis, feedback and recommendations for agents. Order checks in the admin panel and CRM; localization of response templates into Uzbek.",
   j2_when: "June 2023 - February 2024",
   j2_role: "Content Moderator",
-  j2_d: "Reviewing content for compliance with platform policies, removing violating materials, translating support macros RU-UZ and UZ-RU.",
+  j2_d: "Moderating user-generated content for compliance with platform policies and promptly removing violations. Localizing support macros RU-UZ and UZ-RU.",
   j3_when: "February 2023 - April 2023",
   j3_role: "Call Center Team Lead",
-  j3_d: "Built the team from scratch, trained new hires, introduced work standards and monitored compliance.",
+  j3_d: "Launched a call center from scratch: hiring and training the team, developing service standards and monitoring compliance.",
   j4_when: "August 2022 - February 2023",
   j4_role: "Senior Operator",
-  j4_d: "Supervised operators, resolved complex cases, monitored service quality.",
+  j4_d: "Coordinating operators, resolving complex and escalated cases, monitoring service quality.",
   j5_when: "April 2021 - August 2022",
   j5_role: "Technical Support Specialist",
-  j5_d: "Advised customers and resolved technical and payment-related issues.",
+  j5_d: "Supporting payment system customers: resolving technical and payment-related issues.",
   j6_when: "February 2017 - October 2020",
   j6_role: "Operator, 1st Category",
-  j6_d: "Handled citizens' inquiries submitted via the portals of the President of the Republic of Uzbekistan, the Ministry of Communications and the State Communications Inspectorate.",
+  j6_d: "Handling citizens' inquiries submitted via the portals of the President of the Republic of Uzbekistan, the Ministry of Communications and the State Communications Inspectorate.",
 
   pf_title: "Portfolio",
-  pf_lead: "All examples are anonymized: no customer data and no internal company documents.",
+  pf_lead: "Demo cases built on fictional data: they show my approach without any information about real customers or companies.",
+  pf_demo: "demo",
+  pf_process: "process",
   pf1_t: "Quality assurance",
-  pf1_d: "A sample case review against the scorecard: identified errors, score and recommendations for the agent.",
-  pf2_t: "RU - UZ translation",
-  pf2_d: "A sample response template translated from Russian into Uzbek: source text and translation.",
+  pf1_d: "A chat review against the scorecard: what went well, where the error is and how to fix it.",
+  q_head: "Chat #QA-0417 · order 40 minutes late",
+  q1: "Greeting and introduction",
+  q2: "Identifying the issue",
+  q3: "Knowledge base solution",
+  q4: "Tone and empathy",
+  q5: "Proper closing",
+  q_total: "Total",
+  q_rec: "Recommendation: for delays over 30 minutes, offer compensation per the knowledge base article right away, without waiting for the customer to ask.",
   pf3_t: "Content moderation",
-  pf3_d: "A sample moderation decision: what violates platform policies and why.",
-  pf_slot: "Example coming soon",
+  pf3_d: "Decisions from a moderation queue: each one is based on a specific platform rule.",
+  m_head: "Moderation queue · 4 items",
+  m1: "Listing with the seller's phone number",
+  m1r: "off-platform contacts are not allowed",
+  m2: "Review with insults",
+  m2r: "violates communication rules",
+  m3: "Photo does not match the product",
+  m3r: "misleads the buyer",
+  m4: "Product card filled in correctly",
+  m4r: "no violations",
+  m_rej: "Rejected",
+  m_del: "Removed",
+  m_fix: "Needs changes",
+  m_ok: "Approved",
+  pf2_t: "How I work",
+  pf2_d: "Five steps I follow to take service quality from review to results.",
+  s1: "Sampling", s1d: "I select cases across channels, shifts and topics.",
+  s2: "Evaluation", s2d: "I review them against the scorecard, standards and knowledge base.",
+  s3: "Analysis", s3d: "I look for recurring errors, not one-off slips.",
+  s4: "Feedback", s4d: "I explain the error and show how to do it right.",
+  s5: "Follow-up", s5d: "I check that the improvement sticks.",
 
   sk_title: "Skills",
   sk1_t: "Quality and service",
@@ -101,9 +123,13 @@ const EN = {
   edu2_d: "System administration",
 
   ct_title: "Contact",
-  ct_lead: "Open to remote opportunities. Send me a message and I will reply within one business day.",
+  ct_h1: "Let's",
+  ct_h2: "work",
+  ct_h3: "together",
+  ct_lead: "Open to interesting opportunities. Send me a message and I will reply within a day.",
   ct_email: "Email",
-  ct_tg: "Telegram"
+  ct_tg: "Telegram",
+  to_top: "Back to top ↑"
 };
 
 const META = {
@@ -139,15 +165,10 @@ let start = new URLSearchParams(location.search).get("lang");
 if (!start) { try { start = localStorage.getItem("lang"); } catch (e) {} }
 if (start === "en") setLang("en");
 
-// Кнопка резюме: если файла resume.pdf еще нет, кнопка неактивна.
-const resumeBtn = document.getElementById("resumeBtn");
-const resumeNote = document.getElementById("resumeNote");
-function resumeMissing() {
-  resumeBtn.classList.add("is-disabled");
-  resumeBtn.setAttribute("aria-disabled", "true");
-  resumeBtn.removeAttribute("href");
-  resumeNote.hidden = false;
-}
-fetch("resume.pdf", { method: "HEAD" })
-  .then(r => { if (!r.ok) resumeMissing(); })
-  .catch(resumeMissing);
+// Кнопки резюме: пока файла (resume-ru.pdf / resume-en.pdf) нет, кнопка скрыта.
+document.querySelectorAll("[data-resume]").forEach(btn => {
+  const hide = () => { btn.hidden = true; btn.style.display = "none"; };
+  fetch(btn.getAttribute("href"), { method: "HEAD" })
+    .then(r => { if (!r.ok) hide(); })
+    .catch(hide);
+});
