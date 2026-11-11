@@ -400,18 +400,26 @@ html:not(.anim) .tl-line i { height: 100%; }
 /* ===== Большие заголовки: спокойная премиальная анимация ===== */
 .headline { position: relative; transform-style: preserve-3d; will-change: transform; }
 .headline .line, .cta .line { perspective: 700px; }
-.headline .line > span, .cta .line > span { text-shadow: 0 18px 50px rgba(0,0,0,.45); }
+
 .outline {
-  background: linear-gradient(90deg, #4fd8ff, #8b7bff, #4fd8ff, #8b7bff) 0 0 / 300% 100%;
+  background: linear-gradient(90deg, #4fd8ff, #8b7bff, #4fd8ff) 0 0 / 200% 100%;
   -webkit-background-clip: text; background-clip: text; color: transparent; text-shadow: none !important;
-  filter: drop-shadow(0 0 26px rgba(79,216,255,.28));
   animation: flow 16s linear infinite;
 }
-@keyframes flow { to { background-position: 150% 0; } }
+@keyframes flow { to { background-position: -200% 0; } }
 .accent-dot { display: inline-block; }
 @keyframes dotPulse { 50% { text-shadow: 0 0 22px var(--accent), 0 0 44px var(--accent); transform: scale(1.12); } }
 .headline .line, .cta .line { cursor: default; }
+.headline { font-size: clamp(40px, 6.6vw, 96px); line-height: .98; }
 .cta .line { padding-right: .2em; }
+.scroll-hint {
+  display: inline-flex; align-items: center; gap: 10px; margin-top: 4px; text-decoration: none;
+  font: 500 13px var(--mono); letter-spacing: .06em; color: var(--muted); transition: color .3s;
+}
+.scroll-hint:hover { color: var(--accent); }
+.sh-arrow { display: inline-block; color: var(--accent); font-size: 16px; animation: shBob 1.8s ease-in-out infinite; }
+@keyframes shBob { 50% { transform: translateY(5px); } }
+.sh-caret { width: 7px; height: 14px; background: var(--accent); opacity: .8; animation: blink 1s infinite steps(1); }
 .cta-bar { display: block; height: 3px; width: 0; margin-top: 22px; background: linear-gradient(90deg, var(--accent), #8b7bff, transparent); box-shadow: 0 0 18px var(--glow); }
 /* ===== Технические навыки: широкая рамка с терминалом ===== */
 .skill-groups > .skill-wide { grid-column: 1 / -1; display: grid; grid-template-columns: 1fr 1.15fr; gap: 32px; align-items: center; }

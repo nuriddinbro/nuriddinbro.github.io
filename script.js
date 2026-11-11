@@ -15,6 +15,7 @@ const EN = {
   h_l3: "portfolio",
   hero_lead: "I help companies build service that customers value: from the first inquiry to standards, team training and quality control.",
   hero_contact: "Get in touch",
+  hero_hint: "scroll down - I will show you what I can do",
   cv: "Download CV · PDF",
   stat_years: "years in customer service",
   stat_companies: "companies",
