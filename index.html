@@ -18,7 +18,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Exo+2:ital,wght@0,700;0,800;1,700;1,800&family=Onest:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="site.css?v=9">
+<link rel="stylesheet" href="site.css?v=10">
 <script>document.documentElement.classList.add("js");</script>
 </head>
 <body>
@@ -279,36 +279,43 @@
     </div>
   </section>
 
-  <!-- ЯЗЫКИ И ОБРАЗОВАНИЕ -->
+  <!-- ЯЗЫКИ -->
   <section id="languages" class="section">
-    <div class="wrap two-col">
-      <div>
-        <p class="kicker"><span>06</span><span data-i18n="lng_title">Языки</span></p>
-        <ul class="langs">
-          <li class="reveal"><span class="l-name" data-i18n="l_uz">Узбекский</span><span class="lvl" data-i18n="l_uz_l">родной</span><i><b style="--w:100%"></b></i></li>
-          <li class="reveal"><span class="l-name" data-i18n="l_ru">Русский</span><span class="lvl" data-i18n="l_ru_l">свободно, C1</span><i><b style="--w:90%"></b></i></li>
-          <li class="reveal"><span class="l-name" data-i18n="l_kz">Казахский</span><span class="lvl" data-i18n="l_kz_l">выше среднего, B2</span><i><b style="--w:70%"></b></i></li>
-          <li class="reveal"><span class="l-name" data-i18n="l_en">Английский</span><span class="lvl" data-i18n="l_en_l">базовый, A2</span><i><b style="--w:35%"></b></i></li>
-        </ul>
-      </div>
-      <div>
-        <p class="kicker"><span>07</span><span data-i18n="edu_title">Образование</span></p>
-        <ul class="edu">
-          <li class="reveal"><span class="edu-year">2014</span><div><h3 data-i18n="edu1_t">Ташкентский профессиональный колледж связи</h3><p data-i18n="edu1_d">Среднее специальное · Телекоммуникации</p></div></li>
-          <li class="reveal"><span class="edu-year">2026</span><div><h3 data-i18n="edu2_t">Курс ilmuz</h3><p data-i18n="edu2_d">Системное администрирование</p></div></li>
-        </ul>
-        <blockquote class="edu-quote reveal">
-          <p data-i18n="edu_q">Диплом дал базу, а настоящую школу я прохожу на линии: каждое обращение - мини-экзамен, и я сдаю их каждый день уже 9+ лет.</p>
-          <span data-i18n="edu_q2">Среднее специальное + практика = высшая лига сервиса</span>
-        </blockquote>
-      </div>
+    <div class="wrap">
+      <p class="kicker"><span>06</span><span data-i18n="lng_title">Языки</span></p>
+      <ul class="lng-grid">
+          <li class="lng reveal" style="--p:100">
+            <svg class="ring" viewBox="0 0 120 120" aria-hidden="true"><circle cx="60" cy="60" r="52" class="ring-bg"/><circle cx="60" cy="60" r="52" class="ring-fg"/></svg>
+            <span class="lng-code">UZ</span>
+            <span class="lng-hi">Salom!</span>
+            <span class="lng-name" data-i18n="l_uz">Узбекский</span>
+            <span class="lng-lvl" data-i18n="l_uz_l">родной</span>
+          </li>          <li class="lng reveal" style="--p:90">
+            <svg class="ring" viewBox="0 0 120 120" aria-hidden="true"><circle cx="60" cy="60" r="52" class="ring-bg"/><circle cx="60" cy="60" r="52" class="ring-fg"/></svg>
+            <span class="lng-code">RU</span>
+            <span class="lng-hi">Привет!</span>
+            <span class="lng-name" data-i18n="l_ru">Русский</span>
+            <span class="lng-lvl" data-i18n="l_ru_l">свободно, C1</span>
+          </li>          <li class="lng reveal" style="--p:70">
+            <svg class="ring" viewBox="0 0 120 120" aria-hidden="true"><circle cx="60" cy="60" r="52" class="ring-bg"/><circle cx="60" cy="60" r="52" class="ring-fg"/></svg>
+            <span class="lng-code">KZ</span>
+            <span class="lng-hi">Сәлем!</span>
+            <span class="lng-name" data-i18n="l_kz">Казахский</span>
+            <span class="lng-lvl" data-i18n="l_kz_l">выше среднего, B2</span>
+          </li>          <li class="lng reveal" style="--p:35">
+            <svg class="ring" viewBox="0 0 120 120" aria-hidden="true"><circle cx="60" cy="60" r="52" class="ring-bg"/><circle cx="60" cy="60" r="52" class="ring-fg"/></svg>
+            <span class="lng-code">EN</span>
+            <span class="lng-hi">Hello!</span>
+            <span class="lng-name" data-i18n="l_en">Английский</span>
+            <span class="lng-lvl" data-i18n="l_en_l">базовый, A2</span>
+          </li>      </ul>
     </div>
   </section>
 
   <!-- КОНТАКТЫ -->
   <section id="contacts" class="section contacts">
     <div class="wrap">
-      <p class="kicker"><span>08</span><span data-i18n="ct_title">Контакты</span></p>
+      <p class="kicker"><span>07</span><span data-i18n="ct_title">Контакты</span></p>
       <h2 class="cta">
         <span class="line"><span data-i18n="ct_h1">Давайте</span></span>
         <span class="line"><span class="outline" data-i18n="ct_h2">работать</span></span>
@@ -334,8 +341,8 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/lenis@1.1.13/dist/lenis.min.js"></script>
-<script src="bg.js?v=9"></script>
-<script src="script.js?v=9"></script>
-<script src="fx.js?v=9"></script>
+<script src="bg.js?v=10"></script>
+<script src="script.js?v=10"></script>
+<script src="fx.js?v=10"></script>
 </body>
 </html>

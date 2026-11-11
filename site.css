@@ -480,6 +480,30 @@ html.anim .t-group .t-label, html.anim .t-tags li { opacity: 0; }
 @media (max-width: 1000px) { .skill-groups > .skill-wide { grid-template-columns: 1fr; } }
 @media (max-width: 640px) { .term { font-size: 12px; } }
 
+/* ===== Языки: карточки с кольцом уровня ===== */
+.lng-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+.lng {
+  position: relative; display: grid; justify-items: center; text-align: center; padding: 34px 20px 28px;
+  background: var(--card); clip-path: var(--cut); box-shadow: inset 0 0 0 1px var(--line); transition: box-shadow .3s;
+}
+.lng:hover { box-shadow: inset 0 0 0 1px rgba(79,216,255,.55); }
+.ring { width: 150px; height: 150px; transform: rotate(-90deg); grid-area: 1 / 1; }
+.ring circle { fill: none; stroke-width: 6; }
+.ring-bg { stroke: var(--line); }
+.ring-fg { stroke: var(--accent); stroke-linecap: round; stroke-dasharray: 326.7; stroke-dashoffset: calc(326.7 * (1 - var(--p) / 100)); filter: drop-shadow(0 0 6px var(--glow)); }
+html.anim .ring-fg { stroke-dashoffset: 326.7; }
+.lng-code { grid-area: 1 / 1; align-self: center; font: 800 italic 40px/1 var(--display); text-shadow: 2px 2px 0 #1b5c72, 4px 4px 0 #0d3140; transition: opacity .25s, transform .25s; }
+.lng-hi {
+  grid-area: 1 / 1; align-self: center; font: 700 italic 22px var(--display); color: var(--accent); text-shadow: 0 0 14px var(--glow);
+  opacity: 0; transform: scale(.6); transition: opacity .25s, transform .3s cubic-bezier(.2,1.6,.4,1);
+}
+.lng:hover .lng-code, .lng.hi .lng-code { opacity: 0; transform: scale(1.4); }
+.lng:hover .lng-hi, .lng.hi .lng-hi { opacity: 1; transform: none; }
+.lng-name { margin-top: 18px; font: 700 20px var(--display); }
+.lng-lvl { margin-top: 4px; font: 600 11px var(--mono); text-transform: uppercase; letter-spacing: .1em; color: var(--muted); }
+@media (max-width: 1000px) { .lng-grid { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 640px) { .ring { width: 116px; height: 116px; } .lng-code { font-size: 30px; } .lng { padding: 24px 12px 20px; } .lng-name { font-size: 16px; } }
+
 /* Начальные состояния для анимаций */
 html.js.anim .reveal { opacity: 0; transform: translateY(40px); }
 html.js.anim .line > span { transform: translateY(105%); }

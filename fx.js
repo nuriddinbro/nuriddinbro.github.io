@@ -126,10 +126,15 @@
     scrollTrigger: { trigger: "#timeline", start: "top 70%", end: "bottom 60%", scrub: true }
   });
 
-  // Полоски языков
-  gsap.to(".langs b", {
-    scaleX: 1, duration: 1.2, ease: "power3.out", stagger: .12,
-    scrollTrigger: { trigger: ".langs", start: "top 85%" }
+  // На телефоне приветствие показывается по нажатию
+  document.querySelectorAll(".lng").forEach(li => li.addEventListener("click", () => li.classList.toggle("hi")));
+  // Кольца языков заполняются до своего уровня
+  document.querySelectorAll(".lng").forEach((li, i) => {
+    const p = +getComputedStyle(li).getPropertyValue("--p");
+    gsap.to(li.querySelector(".ring-fg"), {
+      strokeDashoffset: 326.7 * (1 - p / 100), duration: 1.6, delay: i * .12, ease: "power3.out",
+      scrollTrigger: { trigger: ".lng-grid", start: "top 85%" }
+    });
   });
 
   // Бегущая строка слегка ускоряется от прокрутки
