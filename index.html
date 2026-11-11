@@ -18,7 +18,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Exo+2:ital,wght@0,700;0,800;1,700;1,800&family=Onest:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="site.css?v=6">
+<link rel="stylesheet" href="site.css?v=8">
 <script>document.documentElement.classList.add("js");</script>
 </head>
 <body>
@@ -199,16 +199,19 @@
           <p data-i18n="pf1_d">Разбор чата по карте оценки: что сделано хорошо, где ошибка и как ее исправить.</p>
           <p class="pf-hint"><span data-i18n="pf_hint">Посмотреть пример</span> →</p>
           <div class="pf-reveal"><div class="demo">
-            <p class="demo-head" data-i18n="q_head">Чат #QA-0417 · заказ опоздал на 40 минут</p>
+            <p class="demo-head" data-i18n="q_head">Чат #QA-0417 · опоздание 40 мин</p>
             <ul class="sc">
               <li><span data-i18n="q1">Приветствие и представление</span><b class="ok">✓</b></li>
               <li><span data-i18n="q2">Выявление проблемы</span><b class="ok">✓</b></li>
-              <li><span data-i18n="q3">Решение по базе знаний</span><b class="bad">−20</b></li>
-              <li><span data-i18n="q4">Тон и эмпатия</span><b class="ok">✓</b></li>
+              <li><span data-i18n="q3">Решение по базе знаний</span><b class="ok">✓</b></li>
+              <li class="sc-bad"><span><span data-i18n="q4">Тон и эмпатия</span><small data-i18n="q4n">эмпатия не проявлена</small></span><b class="bad">−20</b></li>
               <li><span data-i18n="q5">Корректное завершение</span><b class="ok">✓</b></li>
             </ul>
+            <div class="fix">
+              <div class="bubble was"><span data-i18n="was">Было</span><p data-i18n="was_t">Заказ задерживается. Ожидайте.</p></div>
+              <div class="bubble now"><span data-i18n="now">Как надо</span><p class="type" data-i18n="now_t">Понимаю, как неприятно ждать. Курьер будет через 10 минут, а за задержку я начислил вам промокод.</p></div>
+            </div>
             <div class="score"><span data-i18n="q_total">Итог</span><span class="score-bar"><i style="--w:80%"></i></span><b><span class="hcount" data-to="80">80</span>/100</b></div>
-            <p class="demo-note" data-i18n="q_rec">Рекомендация: при опоздании больше 30 минут сразу предлагать компенсацию по статье базы знаний, не дожидаясь запроса клиента.</p>
           </div></div>
         </article>
 
@@ -219,7 +222,7 @@
           <p data-i18n="pf3_d">Решения по очереди модерации: каждое опирается на конкретное правило платформы.</p>
           <p class="pf-hint"><span data-i18n="pf_hint">Посмотреть пример</span> →</p>
           <div class="pf-reveal"><div class="demo">
-            <p class="demo-head" data-i18n="m_head">Очередь модерации · 4 материала</p>
+            <p class="demo-head"><span data-i18n="m_head">Очередь модерации</span> · <span data-i18n="m_checked">проверено</span> <span class="mcount">0</span>/4</p>
             <ul class="mod">
               <li><span><b data-i18n="m1">Объявление с номером телефона продавца</b><small data-i18n="m1r">контакты вне платформы запрещены</small></span><em class="st st-bad" data-i18n="m_rej">Отклонено</em></li>
               <li><span><b data-i18n="m2">Отзыв с оскорблениями</b><small data-i18n="m2r">нарушение правил общения</small></span><em class="st st-bad" data-i18n="m_del">Удалено</em></li>
@@ -355,8 +358,8 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/lenis@1.1.13/dist/lenis.min.js"></script>
-<script src="bg.js?v=6"></script>
-<script src="script.js?v=6"></script>
-<script src="fx.js?v=6"></script>
+<script src="bg.js?v=8"></script>
+<script src="script.js?v=8"></script>
+<script src="fx.js?v=8"></script>
 </body>
 </html>

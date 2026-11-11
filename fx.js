@@ -138,14 +138,81 @@
     scrollTrigger: { trigger: ".marquee", start: "top bottom", end: "bottom top", scrub: true }
   });
 
-  // ===== Портфолио: счетчик при раскрытии, нажатие на телефоне =====
-  document.querySelectorAll(".pf").forEach(card => {
-    const open = () => card.querySelectorAll(".hcount").forEach(el => {
-      const o = { v: 0 };
-      gsap.to(o, { v: +el.dataset.to, duration: 1.1, delay: .6, ease: "power2.out", onUpdate: () => { el.textContent = Math.round(o.v); } });
+  // ===== Портфолио: анимация содержимого при раскрытии =====
+  // Каждый пример - своя анимация (timeline). Навели - играет, убрали - быстро откатывается.
+  function buildQA(card) {
+    const rows = card.querySelectorAll(".sc li");
+    const bad = card.querySelector(".sc-bad");
+    const flash = document.createElement("i"); flash.className = "sc-flash"; bad.appendChild(flash);
+    const was = card.querySelector(".was"), now = card.querySelector(".now"), type = card.querySelector(".type");
+    const strike = document.createElement("i"); strike.className = "strike"; was.appendChild(strike);
+    const count = card.querySelector(".hcount"), bar = card.querySelector(".score-bar i");
+    const typer = { n: 0 }; let full = "";
+    const tl = gsap.timeline({ paused: true });
+    tl.from(card.querySelector(".demo-head"), { opacity: 0, x: -14, duration: .3 }, .25)
+      .from(rows, { opacity: 0, x: -20, duration: .3, stagger: .12 }, .35)
+      .from(card.querySelectorAll(".sc b"), { scale: 0, duration: .35, ease: "back.out(3)", stagger: .12 }, .5)
+      .to(flash, { opacity: 1, duration: .12, repeat: 3, yoyo: true }, 1.15)
+      .fromTo(bad, { x: 0 }, { x: 5, duration: .05, repeat: 5, yoyo: true }, 1.15)
+      .from(was, { opacity: 0, y: 12, duration: .35 }, 1.45)
+      .to(strike, { scaleX: 1, duration: .4, ease: "power2.inOut" }, 1.85)
+      .to(was, { opacity: .55, duration: .3 }, 2.2)
+      .add(() => { if (tl.reversed()) return; full = type.textContent; type.textContent = ""; type.classList.add("typing"); }, 2.1)
+      .from(now, { opacity: 0, y: 12, duration: .35 }, 2.15)
+      .to(typer, { n: 1, duration: 2.2, ease: "none", onUpdate: () => { if (full) type.textContent = full.slice(0, Math.round(full.length * typer.n)); } }, 2.3)
+      .add(() => type.classList.remove("typing"), 4.5)
+      .from(card.querySelector(".score"), { opacity: 0, y: 10, duration: .3 }, 4.4)
+      .fromTo(bar, { width: 0 }, { width: "80%", duration: .9, ease: "power3.out" }, 4.5)
+      .fromTo(count, { textContent: 0 }, { textContent: 80, duration: .9, snap: { textContent: 1 }, ease: "power3.out" }, 4.5);
+    tl.eventCallback("onReverseComplete", () => { if (full) type.textContent = full; type.classList.remove("typing"); });
+    return tl;
+  }
+  function buildMod(card) {
+    const rows = [...card.querySelectorAll(".mod li")];
+    const cnt = card.querySelector(".mcount"); const c = { v: 0 };
+    const tl = gsap.timeline({ paused: true });
+    tl.from(card.querySelector(".demo-head"), { opacity: 0, x: -14, duration: .3 }, .25);
+    rows.forEach((li, i) => {
+      const beam = document.createElement("i"); beam.className = "scan-beam"; li.appendChild(beam);
+      const t = .45 + i * .55;
+      tl.from(li, { opacity: 0, y: 14, duration: .3 }, t)
+        .fromTo(beam, { xPercent: -100, opacity: 1 }, { xPercent: 260, duration: .45, ease: "power1.inOut" }, t + .1)
+        .set(beam, { opacity: 0 }, t + .55)
+        .from(li.querySelector("small"), { opacity: 0, duration: .25 }, t + .35)
+        .from(li.querySelector(".st"), { scale: 2.4, rotate: -14, opacity: 0, duration: .35, ease: "back.out(2.5)" }, t + .4)
+        .to(c, { v: i + 1, duration: .01, onUpdate: () => { cnt.textContent = Math.round(c.v); } }, t + .4);
     });
-    card.addEventListener("mouseenter", open);
-    card.addEventListener("click", () => { if (!matchMedia("(hover: hover)").matches) { card.classList.toggle("open"); if (card.classList.contains("open")) open(); } });
+    return tl;
+  }
+  function buildSteps(card) {
+    const ol = card.querySelector(".steps");
+    const line = document.createElement("span"); line.className = "steps-line"; ol.prepend(line);
+    const items = [...ol.querySelectorAll("li")];
+    const tl = gsap.timeline({ paused: true });
+    tl.add(() => {}, 0);
+    items.forEach((li, i) => {
+      const t = .35 + i * .45;
+      tl.from(li.querySelector("b"), { opacity: 0, x: -16, duration: .3 }, t)
+        .from(li.querySelector("span"), { opacity: 0, x: -16, duration: .3 }, t + .1)
+        .add(() => li.classList.add("lit"), t)
+        .add(() => li.classList.remove("lit"), t - .001);
+    });
+    const lastTop = () => items[items.length - 1].offsetTop;
+    tl.fromTo(line, { height: 0 }, { height: () => lastTop(), duration: .45 * (items.length - 1), ease: "none" }, .35);
+    tl.eventCallback("onReverseComplete", () => items.forEach(li => li.classList.remove("lit")));
+    return tl;
+  }
+  document.querySelectorAll(".pf").forEach(card => {
+    const tl = card.querySelector(".sc") ? buildQA(card) : card.querySelector(".mod") ? buildMod(card) : buildSteps(card);
+    const play = () => tl.timeScale(1).play(0);
+    const back = () => tl.timeScale(3).reverse();
+    card.addEventListener("mouseenter", () => { if (matchMedia("(hover: hover)").matches) play(); });
+    card.addEventListener("mouseleave", () => { if (matchMedia("(hover: hover)").matches) back(); });
+    card.addEventListener("click", () => {
+      if (matchMedia("(hover: hover)").matches) return;
+      card.classList.toggle("open");
+      card.classList.contains("open") ? play() : back();
+    });
   });
 
   // ===== Заголовок: глитч-слои и 3D-наклон =====
