@@ -347,6 +347,118 @@ html:not(.anim) .tl-line i { height: 100%; }
 .footer a { text-decoration: none; }
 .footer a:hover { color: var(--accent); }
 
+/* ===== Портфолио: пример раскрывается при наведении ===== */
+.pf { min-height: 480px; overflow: hidden; }
+.pf-hint {
+  margin: auto 0 0; padding-top: 20px; font: 600 11px var(--mono); text-transform: uppercase; letter-spacing: .12em;
+  color: var(--accent); animation: hintPulse 2s ease-in-out infinite;
+}
+@keyframes hintPulse { 50% { opacity: .45; } }
+.pf-reveal {
+  position: absolute; inset: 0; z-index: 2; display: flex; flex-direction: column; justify-content: center;
+  padding: 26px; background: rgba(7,10,15,.96);
+  clip-path: inset(100% 0 0 0); transition: clip-path .55s cubic-bezier(.7,0,.2,1);
+}
+.pf-reveal::before { /* полоса сканера по краю */
+  content: ""; position: absolute; left: 0; right: 0; top: 0; height: 2px; background: var(--accent); box-shadow: 0 0 14px var(--accent);
+}
+.pf-reveal .demo, .pf-reveal .steps { margin: 0; }
+.pf-reveal .demo { background: transparent; box-shadow: none; padding: 0; }
+.pf-reveal li, .pf-reveal .demo-head, .pf-reveal .score, .pf-reveal .demo-note {
+  opacity: 0; transform: translateX(-16px); transition: opacity .3s, transform .3s;
+}
+.pf-reveal .st { transform: scale(1.8) rotate(-8deg); opacity: 0; transition: transform .35s cubic-bezier(.2,1.6,.4,1), opacity .2s; }
+.pf-reveal .sc b { display: inline-block; transform: scale(0); transition: transform .3s cubic-bezier(.2,1.8,.4,1); }
+.pf-reveal .score-bar i { width: 0; transition: width .9s cubic-bezier(.2,.8,.2,1); }
+
+.pf:hover .pf-reveal, .pf.open .pf-reveal { clip-path: inset(0 0 0 0); }
+.pf:hover .pf-reveal :is(li, .demo-head, .score, .demo-note),
+.pf.open .pf-reveal :is(li, .demo-head, .score, .demo-note) { opacity: 1; transform: none; }
+.pf:hover .pf-reveal .st, .pf.open .pf-reveal .st,
+.pf:hover .pf-reveal .sc b, .pf.open .pf-reveal .sc b { opacity: 1; transform: none; }
+.pf:hover .pf-reveal .score-bar i, .pf.open .pf-reveal .score-bar i { width: var(--w); transition-delay: .6s; }
+/* Очередность появления строк (только при раскрытии) */
+.pf:is(:hover, .open) .demo-head { transition-delay: .2s; }
+.pf:is(:hover, .open) li:nth-child(1), .pf:is(:hover, .open) li:nth-child(1) :is(b, .st) { transition-delay: .28s; }
+.pf:is(:hover, .open) li:nth-child(2), .pf:is(:hover, .open) li:nth-child(2) :is(b, .st) { transition-delay: .36s; }
+.pf:is(:hover, .open) li:nth-child(3), .pf:is(:hover, .open) li:nth-child(3) :is(b, .st) { transition-delay: .44s; }
+.pf:is(:hover, .open) li:nth-child(4), .pf:is(:hover, .open) li:nth-child(4) :is(b, .st) { transition-delay: .52s; }
+.pf:is(:hover, .open) li:nth-child(5), .pf:is(:hover, .open) li:nth-child(5) :is(b, .st) { transition-delay: .6s; }
+.pf:is(:hover, .open) .score { transition-delay: .66s; }
+.pf:is(:hover, .open) .demo-note { transition-delay: .8s; }
+.pf:is(:hover, .open) .sc li :is(b) { transition-delay: inherit; }
+@media (hover: none) { .pf { cursor: pointer; } }
+
+/* ===== Заголовок: 3D-голограмма с глитчем ===== */
+.headline { position: relative; transform-style: preserve-3d; will-change: transform; }
+.headline .line > span:not(.outline) {
+  text-shadow: 1px 1px 0 #2b8db0, 2px 2px 0 #23748f, 3px 3px 0 #1b5c72, 4px 4px 0 #134456, 5px 5px 0 #0d3140, 8px 10px 22px rgba(0,0,0,.55);
+}
+.headline .outline { filter: drop-shadow(2px 2px 0 #3b3a9e) drop-shadow(2px 2px 0 #2a2973) drop-shadow(0 0 22px rgba(79,216,255,.4)); }
+.glitch-layer { position: absolute; inset: 0; pointer-events: none; margin: 0; opacity: 0; }
+.glitch-layer, .glitch-layer * {
+  text-shadow: none !important; filter: none !important; background: none !important;
+  -webkit-text-fill-color: currentColor; color: inherit !important;
+}
+.glitch-a { color: #ff2bd6; mix-blend-mode: screen; animation: glitchA 3.8s infinite steps(1); }
+.glitch-b { color: #4fd8ff; mix-blend-mode: screen; animation: glitchB 3.8s infinite steps(1); }
+@keyframes glitchA {
+  0%, 100% { opacity: 0; }
+  40% { opacity: .85; clip-path: inset(12% 0 70% 0); transform: translate(-6px, 0); }
+  41% { opacity: .85; clip-path: inset(58% 0 22% 0); transform: translate(8px, 0); }
+  42% { opacity: .85; clip-path: inset(80% 0 6% 0); transform: translate(-4px, 0); }
+  43% { opacity: 0; }
+  86% { opacity: .8; clip-path: inset(30% 0 52% 0); transform: translate(10px, 0); }
+  87% { opacity: 0; }
+}
+@keyframes glitchB {
+  0%, 100% { opacity: 0; }
+  40% { opacity: .85; clip-path: inset(64% 0 18% 0); transform: translate(6px, 0); }
+  41% { opacity: .85; clip-path: inset(8% 0 76% 0); transform: translate(-8px, 0); }
+  42% { opacity: 0; }
+  86% { opacity: .8; clip-path: inset(46% 0 36% 0); transform: translate(-10px, 0); }
+  87% { opacity: 0; }
+}
+.headline.is-glitch { animation: headShake .25s steps(2); }
+@keyframes headShake { 50% { transform: translateX(3px) skewX(-4deg); } }
+
+/* ===== Технические навыки: широкая рамка с терминалом ===== */
+.skill-groups > .skill-wide { grid-column: 1 / -1; display: grid; grid-template-columns: 1fr 1.15fr; gap: 32px; align-items: center; }
+.term {
+  position: relative; padding: 0 0 16px; background: rgba(4,7,11,.85); box-shadow: inset 0 0 0 1px rgba(79,216,255,.3), 0 0 40px rgba(79,216,255,.08);
+  font: 500 13px/1.9 var(--mono); overflow: hidden;
+}
+.term::after { content: ""; position: absolute; inset: 0; pointer-events: none; background: repeating-linear-gradient(to bottom, transparent 0 2px, rgba(0,0,0,.25) 2px 4px); }
+.term-bar { display: flex; align-items: center; gap: 6px; padding: 9px 14px; margin-bottom: 10px; border-bottom: 1px solid var(--line); font-size: 11px; color: var(--muted); }
+.term-bar i { width: 9px; height: 9px; border-radius: 50%; background: #2a3542; }
+.term-bar i:first-child { background: #ff5c7a; } .term-bar i:nth-child(2) { background: #f5b83d; } .term-bar i:nth-child(3) { background: #3ddc84; }
+.term-bar span { margin-left: 8px; }
+.term p { margin: 0; padding: 0 16px; color: #c4d2dc; }
+.pr { color: var(--accent); }
+.t-ok .pr { color: #3ddc84; }
+.t-warn .pr, .t-warn { color: #f5b83d; }
+.gl { position: relative; display: inline-block; color: var(--accent); text-shadow: 0 0 10px var(--glow); animation: glShake 2.6s infinite steps(1); }
+.gl::before, .gl::after { content: attr(data-text); position: absolute; left: 0; top: 0; opacity: 0; }
+.gl::before { color: #ff2bd6; animation: glA 2.6s infinite steps(1); }
+.gl::after { color: #4fd8ff; animation: glB 2.6s infinite steps(1); }
+@keyframes glShake { 0%, 100% { transform: none; } 30% { transform: translateX(2px) skewX(-8deg); } 31% { transform: none; } 70% { transform: translateX(-2px); } 71% { transform: none; } }
+@keyframes glA { 0%, 100% { opacity: 0; } 30% { opacity: .9; clip-path: inset(0 0 55% 0); transform: translateX(-4px); } 32% { opacity: 0; } 70% { opacity: .8; clip-path: inset(50% 0 0 0); transform: translateX(3px); } 72% { opacity: 0; } }
+@keyframes glB { 0%, 100% { opacity: 0; } 30% { opacity: .9; clip-path: inset(45% 0 0 0); transform: translateX(4px); } 32% { opacity: 0; } 70% { opacity: .8; clip-path: inset(0 0 60% 0); transform: translateX(-3px); } 72% { opacity: 0; } }
+.caret { display: inline-block; width: 8px; height: 15px; margin-left: 4px; vertical-align: -2px; background: var(--accent); animation: blink 1s infinite steps(1); }
+html.anim .term p { opacity: 0; }
+
+/* Образование: цитата */
+.edu-quote {
+  margin: 28px 0 0; padding: 22px 24px; position: relative; background: var(--card); clip-path: var(--cut);
+  box-shadow: inset 3px 0 0 var(--accent);
+}
+.edu-quote::before { content: "“"; position: absolute; right: 18px; top: -14px; font: 800 96px/1 var(--display); color: rgba(79,216,255,.15); }
+.edu-quote p { font: 700 italic 18px/1.4 var(--display); margin: 0 0 12px; }
+.edu-quote span { font: 600 11px var(--mono); text-transform: uppercase; letter-spacing: .1em; color: var(--accent); }
+@media (min-width: 641px) { .skill-groups { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 1000px) { .skill-groups > .skill-wide { grid-template-columns: 1fr; } }
+@media (max-width: 640px) { .term { font-size: 12px; } }
+
 /* Начальные состояния для анимаций */
 html.js.anim .reveal { opacity: 0; transform: translateY(40px); }
 html.js.anim .line > span { transform: translateY(105%); }

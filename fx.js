@@ -138,6 +138,52 @@
     scrollTrigger: { trigger: ".marquee", start: "top bottom", end: "bottom top", scrub: true }
   });
 
+  // ===== Портфолио: счетчик при раскрытии, нажатие на телефоне =====
+  document.querySelectorAll(".pf").forEach(card => {
+    const open = () => card.querySelectorAll(".hcount").forEach(el => {
+      const o = { v: 0 };
+      gsap.to(o, { v: +el.dataset.to, duration: 1.1, delay: .6, ease: "power2.out", onUpdate: () => { el.textContent = Math.round(o.v); } });
+    });
+    card.addEventListener("mouseenter", open);
+    card.addEventListener("click", () => { if (!matchMedia("(hover: hover)").matches) { card.classList.toggle("open"); if (card.classList.contains("open")) open(); } });
+  });
+
+  // ===== Заголовок: глитч-слои и 3D-наклон =====
+  const head = document.querySelector(".headline");
+  function makeGlitch() {
+    head.querySelectorAll(".glitch-layer").forEach(l => l.remove());
+    const base = head.innerHTML;
+    ["glitch-a", "glitch-b"].forEach(cls => {
+      const l = document.createElement("span");
+      l.className = "glitch-layer " + cls;
+      l.setAttribute("aria-hidden", "true");
+      l.innerHTML = base;
+      l.querySelectorAll("[data-i18n]").forEach(n => n.removeAttribute("data-i18n"));
+      head.appendChild(l);
+    });
+  }
+  intro.add(makeGlitch);
+  document.addEventListener("langchange", () => { if (!document.getElementById("loader")) makeGlitch(); });
+  setInterval(() => { head.classList.add("is-glitch"); setTimeout(() => head.classList.remove("is-glitch"), 260); }, 3800);
+  if (matchMedia("(pointer: fine)").matches) {
+    gsap.set(head, { transformPerspective: 900, transformOrigin: "left center" });
+    const hy = gsap.quickTo(head, "rotateY", { duration: 1.2, ease: "power3" });
+    const hx = gsap.quickTo(head, "rotateX", { duration: 1.2, ease: "power3" });
+    addEventListener("mousemove", e => {
+      hy((e.clientX / innerWidth - .5) * 14);
+      hx(-(e.clientY / innerHeight - .5) * 10);
+    });
+  }
+
+  // ===== Терминал навыков: строки печатаются по очереди =====
+  const syncGl = () => document.querySelectorAll(".gl").forEach(g => g.dataset.text = g.textContent);
+  syncGl();
+  document.addEventListener("langchange", syncGl);
+  gsap.to(".term p", {
+    opacity: 1, duration: .05, stagger: .45, ease: "none",
+    scrollTrigger: { trigger: ".term", start: "top 85%" }
+  });
+
   // ===== Эффекты для мышки =====
   if (matchMedia("(pointer: fine)").matches) {
     // Свой курсор

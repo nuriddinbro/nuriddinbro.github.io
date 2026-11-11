@@ -14,8 +14,7 @@ const EN = {
   h_l3: "better",
   hero_lead: "I help companies build service that customers value: from the first inquiry to standards, team training and quality control.",
   hero_contact: "Get in touch",
-  cv_ru: "CV RU",
-  cv_en: "CV EN",
+  cv: "Download CV · PDF",
   stat_years: "years in customer service",
   stat_companies: "companies",
   stat_lang: "translation and localization",
@@ -62,6 +61,7 @@ const EN = {
   pf_title: "Portfolio",
   pf_lead: "Demo cases built on fictional data: they show my approach without any information about real customers or companies.",
   pf_demo: "demo",
+  pf_hint: "View example",
   pf_process: "process",
   pf1_t: "Quality assurance",
   pf1_d: "A chat review against the scorecard: what went well, where the error is and how to fix it.",
@@ -108,7 +108,15 @@ const EN = {
   sk2_2: "Admin panels",
   sk2_5: "Reporting",
   sk3_t: "Technical skills",
+  sk3_1: "Workstation setup",
   sk3_2: "Software and driver installation",
+  sk3_3: "Remote support",
+  t1: "skills for high-quality task delivery: available",
+  t2: "required skill not found?",
+  t3: "updating memory and learning...",
+  t4: "skill installed. Ready for the task.",
+  edu_q: "My diploma gave me the foundation, but my real school is the front line: every inquiry is a mini exam, and I have been passing them every day for 9+ years.",
+  edu_q2: "Vocational degree + practice = top league of service",
   sk3_5: "System administration (in progress)",
 
   lng_title: "Languages",
@@ -118,7 +126,7 @@ const EN = {
   l_en: "English", l_en_l: "elementary, A2",
   edu_title: "Education",
   edu1_t: "Tashkent Professional College of Communications",
-  edu1_d: "Telecommunications",
+  edu1_d: "Vocational degree · Telecommunications",
   edu2_t: "ilmuz course",
   edu2_d: "System administration",
 
@@ -154,6 +162,8 @@ function setLang(lang) {
     b.setAttribute("aria-pressed", String(b.dataset.setLang === lang));
   });
   try { localStorage.setItem("lang", lang); } catch (e) {}
+  const cvBtn = document.getElementById("resumeBtn");
+  if (cvBtn) cvBtn.setAttribute("href", lang === "en" ? "resume-en.pdf" : "resume-ru.pdf");
   document.dispatchEvent(new CustomEvent("langchange", { detail: lang }));
 }
 
@@ -165,10 +175,4 @@ let start = new URLSearchParams(location.search).get("lang");
 if (!start) { try { start = localStorage.getItem("lang"); } catch (e) {} }
 if (start === "en") setLang("en");
 
-// Кнопки резюме: пока файла (resume-ru.pdf / resume-en.pdf) нет, кнопка скрыта.
-document.querySelectorAll("[data-resume]").forEach(btn => {
-  const hide = () => { btn.hidden = true; btn.style.display = "none"; };
-  fetch(btn.getAttribute("href"), { method: "HEAD" })
-    .then(r => { if (!r.ok) hide(); })
-    .catch(hide);
-});
+// Кнопка резюме сама меняет файл по языку сайта (см. setLang): resume-ru.pdf / resume-en.pdf
