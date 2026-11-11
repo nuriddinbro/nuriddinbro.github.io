@@ -405,10 +405,10 @@ html:not(.anim) .tl-line i { height: 100%; }
   background: linear-gradient(90deg, #4fd8ff, #8b7bff, #4fd8ff, #8b7bff) 0 0 / 300% 100%;
   -webkit-background-clip: text; background-clip: text; color: transparent; text-shadow: none !important;
   filter: drop-shadow(0 0 26px rgba(79,216,255,.28));
-  animation: flow 9s linear infinite;
+  animation: flow 16s linear infinite;
 }
 @keyframes flow { to { background-position: 150% 0; } }
-.accent-dot { display: inline-block; animation: dotPulse 2.6s ease-in-out infinite; }
+.accent-dot { display: inline-block; }
 @keyframes dotPulse { 50% { text-shadow: 0 0 22px var(--accent), 0 0 44px var(--accent); transform: scale(1.12); } }
 .headline .line, .cta .line { cursor: default; }
 /* ===== Технические навыки: широкая рамка с терминалом ===== */
@@ -568,7 +568,7 @@ html.anim .ring-fg { stroke-dashoffset: 326.7; }
 
 /* Начальные состояния для анимаций */
 html.js.anim .reveal { opacity: 0; transform: translateY(40px); }
-html.js.anim .line > span { transform: translateY(105%); }
+html.js.anim .line > span { opacity: 0; }
 html.js.anim .langs b { transform: scaleX(0); }
 
 /* ===== Планшет ===== */

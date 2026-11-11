@@ -63,8 +63,8 @@
 
   // ===== Заставка =====
   // Плавное появление строк больших заголовков: разворот из глубины + фокус
-  const LINE_FROM = { yPercent: 110, rotateX: -75, opacity: 0, filter: "blur(12px)", transformOrigin: "50% 100%" };
-  const LINE_TO = { yPercent: 0, y: 0, rotateX: 0, opacity: 1, filter: "blur(0px)", duration: 1.4, ease: "expo.out", clearProps: "filter" };
+  const LINE_FROM = { yPercent: 0, y: 26, opacity: 0, filter: "blur(8px)" };
+  const LINE_TO = { y: 0, opacity: 1, filter: "blur(0px)", duration: 1.8, ease: "power2.out", clearProps: "filter" };
 
   // Строки "загрузки" появляются по очереди, потом заставка гаснет
   const intro = gsap.timeline();
@@ -245,33 +245,6 @@
     });
   });
 
-  // ===== Большие заголовки: "расшифровка" букв при наведении и легкий наклон =====
-  const head = document.querySelector(".headline");
-  const GLYPHS = "ABCDEFGHKMNPRSTUXZ0123456789#%&*+=/<>";
-  document.querySelectorAll(".headline [data-i18n], .cta [data-i18n]").forEach(el => {
-    let busy = false;
-    el.closest(".line").addEventListener("mouseenter", () => {
-      if (busy) return; busy = true;
-      const text = el.textContent, o = { p: 0 };
-      gsap.to(o, {
-        p: 1, duration: .7, ease: "power1.out",
-        onUpdate: () => {
-          const done = Math.floor(text.length * o.p);
-          el.textContent = text.slice(0, done) + [...text.slice(done)].map(ch => ch === " " ? " " : GLYPHS[Math.random() * GLYPHS.length | 0]).join("");
-        },
-        onComplete: () => { el.textContent = text; busy = false; }
-      });
-    });
-  });
-  if (matchMedia("(pointer: fine)").matches) {
-    gsap.set(head, { transformPerspective: 1200, transformOrigin: "left center" });
-    const hy = gsap.quickTo(head, "rotateY", { duration: 1.6, ease: "power3" });
-    const hx = gsap.quickTo(head, "rotateX", { duration: 1.6, ease: "power3" });
-    addEventListener("mousemove", e => {
-      hy((e.clientX / innerWidth - .5) * 6);
-      hx(-(e.clientY / innerHeight - .5) * 4);
-    });
-  }
 
   // ===== Терминал навыков: строки печатаются по очереди =====
   const syncGl = () => document.querySelectorAll(".gl").forEach(g => g.dataset.text = g.textContent);
