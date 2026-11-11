@@ -454,6 +454,19 @@ html:not(.anim) .tl-line i { height: 100%; }
 @keyframes glB { 0%, 100% { opacity: 0; } 30% { opacity: .9; clip-path: inset(45% 0 0 0); transform: translateX(4px); } 32% { opacity: 0; } 70% { opacity: .8; clip-path: inset(0 0 60% 0); transform: translateX(-3px); } 72% { opacity: 0; } }
 .caret { display: inline-block; width: 8px; height: 15px; margin-left: 4px; vertical-align: -2px; background: var(--accent); animation: blink 1s infinite steps(1); }
 html.anim .term p { opacity: 0; }
+/* Терминал-интервью на всю ширину */
+.term-full { padding-bottom: 22px; font-size: 14px; }
+.term-full p, .t-group { padding: 0 22px; }
+.t-q { font-size: 16px; color: var(--text); margin-bottom: 6px !important; }
+.t-q .pr { color: #f5b83d; }
+.t-group { display: grid; grid-template-columns: 210px 1fr; gap: 14px; align-items: start; margin: 10px 0; }
+.t-label { color: var(--muted); padding-top: 5px; }
+.t-label::before { content: "[ "; color: var(--accent); } .t-label::after { content: " ]"; color: var(--accent); }
+.t-tags { display: flex; flex-wrap: wrap; gap: 8px; }
+.t-tags li { font: 500 13px var(--font); padding: 5px 11px; color: var(--text); box-shadow: inset 0 0 0 1px rgba(79,216,255,.3); background: rgba(79,216,255,.06); transition: background .2s, color .2s; }
+.t-tags li:hover { background: var(--accent); color: var(--bg); }
+html.anim .t-group .t-label, html.anim .t-tags li { opacity: 0; }
+@media (max-width: 640px) { .t-group { grid-template-columns: 1fr; gap: 6px; } .term-full p, .t-group { padding: 0 14px; } }
 
 /* Образование: цитата */
 .edu-quote {

@@ -246,10 +246,23 @@
   const syncGl = () => document.querySelectorAll(".gl").forEach(g => g.dataset.text = g.textContent);
   syncGl();
   document.addEventListener("langchange", syncGl);
-  gsap.to(".term p", {
-    opacity: 1, duration: .05, stagger: .45, ease: "none",
-    scrollTrigger: { trigger: ".term", start: "top 85%" }
-  });
+  // Вопрос работодателя печатается, затем терминал отвечает: группы навыков вылетают по очереди
+  const term = document.querySelector(".term-full");
+  if (term) {
+    const ps = [...term.querySelectorAll(":scope > p")];
+    const tq = term.querySelector(".tq");
+    const typ = { n: 0 }; let qFull = "";
+    const tl = gsap.timeline({ scrollTrigger: { trigger: term, start: "top 75%" } });
+    tl.set(ps[0], { opacity: 1 })
+      .add(() => { qFull = tq.textContent; tq.textContent = ""; })
+      .to(typ, { n: 1, duration: 1.2, ease: "none", onUpdate: () => { if (qFull) tq.textContent = qFull.slice(0, Math.round(qFull.length * typ.n)); } })
+      .set(ps[1], { opacity: 1 }, "+=.35");
+    term.querySelectorAll(".t-group").forEach(g => {
+      tl.to(g.querySelector(".t-label"), { opacity: 1, duration: .1 }, "+=.25")
+        .fromTo(g.querySelectorAll("li"), { opacity: 0, y: 10, scale: .8 }, { opacity: 1, y: 0, scale: 1, duration: .3, ease: "back.out(2)", stagger: .06 });
+    });
+    ps.slice(2).forEach(p => tl.set(p, { opacity: 1 }, "+=.45"));
+  }
 
   // ===== Эффекты для мышки =====
   if (matchMedia("(pointer: fine)").matches) {

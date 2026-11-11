@@ -18,7 +18,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Exo+2:ital,wght@0,700;0,800;1,700;1,800&family=Onest:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="site.css?v=8">
+<link rel="stylesheet" href="site.css?v=9">
 <script>document.documentElement.classList.add("js");</script>
 </head>
 <body>
@@ -251,54 +251,30 @@
     </div>
   </section>
 
-  <!-- НАВЫКИ -->
+  <!-- НАВЫКИ: работодатель задает вопрос, терминал отвечает -->
   <section id="skills" class="section">
     <div class="wrap">
       <p class="kicker"><span>05</span><span data-i18n="sk_title">Навыки</span></p>
-      <div class="skill-groups">
-        <div class="reveal">
-          <h3 data-i18n="sk1_t">Качество и сервис</h3>
-          <ul class="tags">
-            <li data-i18n="sk1_1">Аудит чатов и звонков</li>
-            <li data-i18n="sk1_2">Карта оценки качества</li>
-            <li data-i18n="sk1_3">Обратная связь</li>
-            <li data-i18n="sk1_4">Стандарты обслуживания</li>
-            <li data-i18n="sk1_5">Обучение и адаптация</li>
-            <li data-i18n="sk1_6">Модерация контента</li>
-          </ul>
-        </div>
-        <div class="reveal">
-          <h3 data-i18n="sk2_t">Данные и инструменты</h3>
-          <ul class="tags">
-            <li>CRM</li>
-            <li data-i18n="sk2_2">Админ-панели</li>
-            <li>Google Sheets</li>
-            <li>Excel</li>
-            <li data-i18n="sk2_5">Отчеты</li>
-          </ul>
-        </div>
-        <div class="reveal skill-wide">
-          <div>
-            <h3 data-i18n="sk3_t">Технические навыки</h3>
-            <ul class="tags">
-              <li>Windows</li>
-              <li data-i18n="sk3_1">Настройка рабочих мест</li>
-              <li data-i18n="sk3_2">Установка ПО и драйверов</li>
-              <li data-i18n="sk3_3">Удаленная поддержка</li>
-              <li>AnyDesk</li>
-              <li>RDP</li>
-              <li data-i18n="sk3_5">Системное администрирование (изучаю)</li>
-            </ul>
-          </div>
-          <div class="term" aria-label="Статус навыков">
-            <div class="term-bar"><i></i><i></i><i></i><span>skills.sh</span></div>
-            <p><span class="pr">&gt;</span> scan --skills --task=any</p>
-            <p class="t-ok"><span class="pr">[✓]</span> <span data-i18n="t1">навыки для качественного выполнения задач: в наличии</span></p>
-            <p class="t-warn"><span class="pr">[!]</span> <span data-i18n="t2">нужного навыка не нашлось?</span></p>
-            <p class="t-glitch"><span class="pr">&gt;</span> <span class="gl" data-i18n="t3">обновляю память и обучаюсь...</span><span class="caret"></span></p>
-            <p class="t-ok"><span class="pr">[✓]</span> <span data-i18n="t4">навык установлен. Готов к задаче.</span></p>
-          </div>
-        </div>
+      <div class="term term-full reveal" aria-label="Навыки">
+        <div class="term-bar"><i></i><i></i><i></i><span>skills.sh · interview</span></div>
+        <p class="t-q"><span class="pr">HR &gt;</span> <span class="tq" data-i18n="t0">Какими навыками вы владеете?</span></p>
+        <p><span class="pr">&gt;</span> scan --skills --task=any</p>
+        <div class="t-group"><span class="t-label" data-i18n="sk1_t">качество и сервис</span>
+          <ul class="t-tags">
+            <li data-i18n="sk1_1">Аудит чатов и звонков</li><li data-i18n="sk1_2">Карта оценки качества</li><li data-i18n="sk1_3">Обратная связь</li><li data-i18n="sk1_4">Стандарты обслуживания</li><li data-i18n="sk1_5">Обучение и адаптация</li><li data-i18n="sk1_6">Модерация контента</li><li data-i18n="sk1_7">Перевод RU-UZ</li>
+          </ul></div>
+        <div class="t-group"><span class="t-label" data-i18n="sk2_t">данные и инструменты</span>
+          <ul class="t-tags">
+            <li>CRM</li><li data-i18n="sk2_2">Админ-панели</li><li>Google Sheets</li><li>Excel</li><li data-i18n="sk2_5">Отчеты</li>
+          </ul></div>
+        <div class="t-group"><span class="t-label" data-i18n="sk3_t">техника</span>
+          <ul class="t-tags">
+            <li>Windows</li><li data-i18n="sk3_1">Настройка рабочих мест</li><li data-i18n="sk3_2">Установка ПО и драйверов</li><li data-i18n="sk3_3">Удаленная поддержка</li><li>AnyDesk</li><li>RDP</li><li data-i18n="sk3_5">Системное администрирование (изучаю)</li>
+          </ul></div>
+        <p class="t-ok"><span class="pr">[✓]</span> <span data-i18n="t1">навыки для качественного выполнения задач: в наличии</span></p>
+        <p class="t-warn"><span class="pr">[!]</span> <span data-i18n="t2">нужного навыка не нашлось?</span></p>
+        <p class="t-glitch"><span class="pr">&gt;</span> <span class="gl" data-i18n="t3">обновляю память и обучаюсь...</span></p>
+        <p class="t-ok"><span class="pr">[✓]</span> <span data-i18n="t4">навык установлен. Готов к задаче.</span><span class="caret"></span></p>
       </div>
     </div>
   </section>
@@ -358,8 +334,8 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/lenis@1.1.13/dist/lenis.min.js"></script>
-<script src="bg.js?v=8"></script>
-<script src="script.js?v=8"></script>
-<script src="fx.js?v=8"></script>
+<script src="bg.js?v=9"></script>
+<script src="script.js?v=9"></script>
+<script src="fx.js?v=9"></script>
 </body>
 </html>
