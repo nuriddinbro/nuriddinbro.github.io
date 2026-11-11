@@ -175,6 +175,33 @@
     scrollTrigger: { trigger: ".marquee", start: "top bottom", end: "bottom top", scrub: true }
   });
 
+  // ===== Заголовок: мягкие "живые" анимации слов, редко и плавно =====
+  let wordTls = [];
+  function splitChars(el) {
+    el.innerHTML = [...el.textContent].map(ch => ch === " " ? " " : '<span class="ch">' + ch + "</span>").join("");
+    return el.querySelectorAll(".ch");
+  }
+  function headWords() {
+    wordTls.forEach(t => t.kill()); wordTls = [];
+    const w1 = document.querySelector('.headline [data-i18n="h_l1"]');
+    const w2 = document.querySelector('.headline [data-i18n="h_l2"]');
+    const w3 = document.querySelector('.headline [data-i18n="h_l3a"]');
+    // "Добро": по буквам пробегает голубой свет
+    const c1 = splitChars(w1);
+    wordTls.push(gsap.timeline({ repeat: -1, repeatDelay: 7, delay: 1 })
+      .to(c1, { color: "#4fd8ff", textShadow: "0 0 18px rgba(79,216,255,.7)", duration: .5, ease: "sine.inOut", stagger: .09, yoyo: true, repeat: 1 }));
+    // "пожаловать": буквы мягко поднимаются волной
+    const c2 = splitChars(w2);
+    wordTls.push(gsap.timeline({ repeat: -1, repeatDelay: 6, delay: 2.5 })
+      .to(c2, { yPercent: -14, duration: .5, ease: "sine.inOut", stagger: .06, yoyo: true, repeat: 1 }));
+    // "в мое": спокойное "дыхание" букв
+    const c3 = splitChars(w3);
+    wordTls.push(gsap.timeline({ repeat: -1, repeatDelay: 8, delay: 4 })
+      .to(c3, { opacity: .35, duration: .6, ease: "sine.inOut", stagger: .12, yoyo: true, repeat: 1 }));
+  }
+  intro.add(headWords);
+  document.addEventListener("langchange", () => { if (!document.getElementById("loader")) headWords(); });
+
   // ===== Портфолио: анимация содержимого при раскрытии =====
   // Каждый пример - своя анимация (timeline). Навели - играет, убрали - быстро откатывается.
   function buildQA(card) {

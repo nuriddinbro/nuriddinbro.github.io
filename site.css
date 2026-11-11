@@ -411,6 +411,7 @@ html:not(.anim) .tl-line i { height: 100%; }
 @keyframes dotPulse { 50% { text-shadow: 0 0 22px var(--accent), 0 0 44px var(--accent); transform: scale(1.12); } }
 .headline .line, .cta .line { cursor: default; }
 .headline { font-size: clamp(40px, 6.6vw, 96px); line-height: .98; }
+.headline .ch { display: inline-block; will-change: transform; }
 .cta .line { padding-right: .2em; }
 .scroll-hint {
   display: inline-flex; align-items: center; gap: 10px; margin-top: 4px; text-decoration: none;
