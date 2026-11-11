@@ -8,10 +8,10 @@ const EN = {
 
   hero_loc: "Tashkent, Uzbekistan · open to remote work",
   hero_name: "Nuriddin Akhmedov",
-  hero_role: "Customer Service Quality Assurance Specialist",
-  h_l1: "Service",
-  h_l2: "quality",
-  h_l3: "under control",
+  hero_role: "9+ years in customer service",
+  h_l1: "Making",
+  h_l2: "service",
+  h_l3: "better",
   stat_langs: "languages",
   pf_soon: "soon",
   ct_h1: "Let's",
@@ -27,8 +27,8 @@ const EN = {
   stat_lang: "translation and localization",
 
   about_title: "About",
-  about_p1: "Quality assurance and operational efficiency specialist in customer service. Over 9 years of experience in support: I have grown from a call center operator to a call center manager, and I currently work in the Quality Assurance team at Yandex Eats.",
-  about_p2: "I am looking for a remote position in quality assurance, content moderation, Russian - Uzbek translation, data and spreadsheet work, or technical support.",
+  about_p1: "Over 9 years in customer service: technical support, complex cases, team leadership, content moderation, translation and quality assurance. I have grown from operator to call center manager and currently work at Yandex Eats.",
+  about_p2: "Open to interesting remote opportunities: quality assurance, content moderation, Russian - Uzbek translation, data and spreadsheet work, technical support.",
 
   exp_title: "Core expertise",
   ex1_t: "Quality audits",
@@ -108,7 +108,7 @@ const EN = {
 
 const META = {
   ru: { title: document.title },
-  en: { title: "Nuriddin Akhmedov - Quality Assurance Specialist" }
+  en: { title: "Nuriddin Akhmedov - Customer Service, QA, Moderation, Translation" }
 };
 
 const nodes = document.querySelectorAll("[data-i18n]");

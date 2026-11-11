@@ -8,7 +8,9 @@
   // Процент прокрутки в меню
   function updateProgress() {
     const max = document.documentElement.scrollHeight - innerHeight;
-    progressEl.textContent = Math.round(max > 0 ? (scrollY / max) * 100 : 0) + "%";
+    const p = Math.round(max > 0 ? (scrollY / max) * 100 : 0);
+    progressEl.textContent = p + "%";
+    document.querySelector(".topbar").style.setProperty("--p", p + "%");
   }
   addEventListener("scroll", updateProgress, { passive: true });
   updateProgress();
@@ -54,34 +56,28 @@
   });
 
   // ===== Заставка =====
-  const num = document.getElementById("loaderNum");
-  const bar = document.getElementById("loaderBar");
-  const counter = { v: 0 };
+  // Строки "загрузки" появляются по очереди, потом заставка гаснет
   const intro = gsap.timeline();
   intro
-    .to(counter, {
-      v: 100, duration: 1.3, ease: "power2.inOut",
-      onUpdate: () => { num.textContent = Math.round(counter.v); bar.style.width = counter.v + "%"; }
-    })
-    .to(loader, { yPercent: -100, duration: .8, ease: "power4.inOut" }, "+=.1")
+    .to(".boot p", { opacity: 1, duration: .05, stagger: .22 })
+    .to("#bootBar", { width: "100%", duration: 1, ease: "power2.inOut" }, 0)
+    .to(loader, { opacity: 0, duration: .5, ease: "power2.out" }, "+=.15")
     .add(() => { loader.remove(); if (lenis) lenis.start(); })
-    .to(".hero .line > span", { y: 0, duration: 1.1, ease: "power4.out", stagger: .1 }, "-=.45")
+    .to(".hero .line > span", { y: 0, duration: 1.1, ease: "power4.out", stagger: .1 }, "-=.3")
     .to(".hero .reveal", { opacity: 1, y: 0, duration: .9, ease: "power3.out", stagger: .1 }, "-=.8")
-    .from(".tile", { scale: 0, rotate: 0, opacity: 0, duration: 1, ease: "back.out(1.6)", stagger: .08 }, "-=1");
+    // Голограмма "включается"
+    .from(".holo", { scaleY: .02, opacity: 0, duration: .9, ease: "expo.out" }, "-=1");
 
-  // ===== Плитки двигаются за мышкой и при прокрутке =====
-  document.querySelectorAll(".tile").forEach((t, i) => {
-    const depth = (i % 3 + 1) * 14;
-    gsap.to(t, { yPercent: -depth * 4, ease: "none", scrollTrigger: { trigger: ".hero", start: "top top", end: "bottom top", scrub: true } });
-    gsap.to(t, { y: "+=14", duration: 2.4 + i * .3, repeat: -1, yoyo: true, ease: "sine.inOut" });
-  });
+  // Голограмма уходит вверх при прокрутке и слегка поворачивается за мышкой
+  gsap.to(".holo-img", { yPercent: -12, ease: "none", scrollTrigger: { trigger: ".hero", start: "top top", end: "bottom top", scrub: true } });
   if (matchMedia("(pointer: fine)").matches) {
-    const movers = [...document.querySelectorAll(".tile")].map((t, i) => ({
-      x: gsap.quickTo(t, "x", { duration: 1, ease: "power3" }), k: (i % 3 + 1) * 10
-    }));
+    const holo = document.querySelector(".holo-img");
+    gsap.set(holo, { transformPerspective: 800 });
+    const ry = gsap.quickTo(holo, "rotateY", { duration: 1, ease: "power3" });
+    const rx = gsap.quickTo(holo, "rotateX", { duration: 1, ease: "power3" });
     addEventListener("mousemove", e => {
-      const dx = e.clientX / innerWidth - .5;
-      movers.forEach(m => m.x(dx * m.k * 3));
+      ry((e.clientX / innerWidth - .5) * 16);
+      rx(-(e.clientY / innerHeight - .5) * 10);
     });
   }
 

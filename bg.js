@@ -10,8 +10,8 @@
 
   // Цветные пятна: лайм, бирюза, фиолетовый
   const blobs = [
-    { c: [196, 245, 68], r: .45, x: .80, y: .20, sx: .00021, sy: .00017, p: 0 },
-    { c: [56, 214, 196], r: .40, x: .10, y: .70, sx: .00016, sy: .00023, p: 2 },
+    { c: [79, 216, 255], r: .45, x: .80, y: .20, sx: .00021, sy: .00017, p: 0 },
+    { c: [59, 108, 255], r: .40, x: .10, y: .70, sx: .00016, sy: .00023, p: 2 },
     { c: [124, 92, 255], r: .38, x: .55, y: .95, sx: .00019, sy: .00014, p: 4 }
   ];
 
@@ -29,7 +29,7 @@
     mouse.x += (mouse.tx - mouse.x) * .08;
     mouse.y += (mouse.ty - mouse.y) * .08;
 
-    ctx.fillStyle = "#0d0e10";
+    ctx.fillStyle = "#0a0d12";
     ctx.fillRect(0, 0, w, h);
 
     // Пятна
@@ -54,7 +54,7 @@
       const d = Math.hypot(x - mouse.x, y - mouse.y);
       if (d < R) {
         const k = 1 - d / R;
-        ctx.fillStyle = `rgba(196,245,68,${.15 + k * .75})`;
+        ctx.fillStyle = `rgba(79,216,255,${.15 + k * .75})`;
         const push = k * 6;
         ctx.beginPath();
         ctx.arc(x + (x - mouse.x) / (d || 1) * push, y + (y - mouse.y) / (d || 1) * push, 1 + k * 1.8, 0, 6.283);
