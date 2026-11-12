@@ -1,7 +1,12 @@
 // 3D-сцена из светящихся частиц (Three.js).
 // Частицы собираются в силуэт, а при прокрутке перетекают в фигуру каждого раздела:
 // силуэт -> гарнитура -> щит с галочкой -> терминал -> глобус -> конверт.
-import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js";
+import * as THREE from "three";
+import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
+import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
+import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js";
+import { ShaderPass } from "three/addons/postprocessing/ShaderPass.js";
+
 
 const root = document.documentElement;
 const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -12,7 +17,7 @@ const canvas = document.createElement("canvas");
 canvas.id = "scene3d";
 let renderer;
 try {
-  renderer = new THREE.WebGLRenderer({ canvas, antialias: false, alpha: true, powerPreference: "high-performance" });
+  renderer = new THREE.WebGLRenderer({ canvas, antialias: false, alpha: false, powerPreference: "high-performance" });
 } catch (e) { renderer = null; }
 
 if (renderer) start();
@@ -163,7 +168,55 @@ async function start() {
   const dpr = Math.min(devicePixelRatio || 1, isMobile ? 1.5 : 1.75);
   renderer.setPixelRatio(dpr);
   renderer.setSize(innerWidth, innerHeight);
-  renderer.setClearColor(0x000000, 0);
+  renderer.setClearColor(0x0a0d12, 1);
+
+  // ---------- Фон: живая туманность (вместо плоского 2D-фона) ----------
+  const bgMat = new THREE.ShaderMaterial({
+    depthWrite: false, depthTest: false,
+    uniforms: { uTime: { value: 0 }, uScroll: { value: 0 }, uMouse: { value: new THREE.Vector2() }, uAspect: { value: 1 } },
+    vertexShader: `varying vec2 vUv; void main(){ vUv = uv; gl_Position = vec4(position.xy, 0.0, 1.0); }`,
+    fragmentShader: `
+      varying vec2 vUv; uniform float uTime, uScroll, uAspect; uniform vec2 uMouse;
+      float h(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+      float n(vec2 p){ vec2 i = floor(p), f = fract(p); f = f*f*(3.0-2.0*f);
+        return mix(mix(h(i), h(i+vec2(1,0)), f.x), mix(h(i+vec2(0,1)), h(i+vec2(1,1)), f.x), f.y); }
+      float fbm(vec2 p){ float v = 0.0, a = 0.5; for (int i = 0; i < 5; i++) { v += a * n(p); p *= 2.02; a *= 0.5; } return v; }
+      void main(){
+        vec2 uv = vUv; vec2 p = vec2(uv.x * uAspect, uv.y) * 2.2;
+        p.y += uScroll * 0.6;
+        float t = uTime * 0.03;
+        float q = fbm(p + vec2(t, -t) + uMouse * 0.15);
+        float r = fbm(p * 1.4 + q * 1.8 - vec2(t * 1.3, t * 0.7));
+        vec3 base = vec3(0.039, 0.051, 0.071);
+        vec3 cyan = vec3(0.31, 0.85, 1.0), violet = vec3(0.55, 0.48, 1.0);
+        vec3 col = base + cyan * pow(r, 3.0) * 0.3 + violet * pow(q, 3.0) * 0.26;
+        float vig = smoothstep(1.25, 0.25, length(uv - 0.5) * 1.6);
+        gl_FragColor = vec4(col * (0.55 + 0.45 * vig), 1.0);
+      }`
+  });
+  const bgQuad = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), bgMat);
+  bgQuad.frustumCulled = false; bgQuad.renderOrder = -1;
+  scene.add(bgQuad);
+
+  // ---------- Пыль в глубине: ощущение пространства ----------
+  const DUST = isMobile ? 700 : 1800;
+  const dustPos = new Float32Array(DUST * 3), dustSeed = new Float32Array(DUST);
+  for (let i = 0; i < DUST; i++) { dustPos.set([rnd(-16, 16), rnd(-12, 12), rnd(-22, 4)], i * 3); dustSeed[i] = Math.random(); }
+  const dustGeo = new THREE.BufferGeometry();
+  dustGeo.setAttribute("position", new THREE.BufferAttribute(dustPos, 3));
+  dustGeo.setAttribute("seed", new THREE.BufferAttribute(dustSeed, 1));
+  const dustMat = new THREE.ShaderMaterial({
+    transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
+    uniforms: { uTime: { value: 0 }, uSize: { value: 1.6 * dpr } },
+    vertexShader: `attribute float seed; uniform float uTime, uSize; varying float vA;
+      void main(){ vec3 p = position; p.y += sin(uTime * .1 + seed * 20.0) * .4; p.x += cos(uTime * .08 + seed * 13.0) * .4;
+        vec4 mv = modelViewMatrix * vec4(p, 1.0); gl_PointSize = uSize * (0.5 + seed) * (8.0 / -mv.z); gl_Position = projectionMatrix * mv;
+        vA = (0.25 + 0.75 * abs(sin(uTime * .5 + seed * 30.0))) * smoothstep(-24.0, -2.0, mv.z) * 0.6; }`,
+    fragmentShader: `varying float vA; void main(){ float r = length(gl_PointCoord - .5); if (r > .5) discard; gl_FragColor = vec4(0.55, 0.85, 1.0, smoothstep(.5, 0., r) * vA); }`
+  });
+  const dust = new THREE.Points(dustGeo, dustMat);
+  dust.frustumCulled = false;
+  scene.add(dust);
 
   const geo = new THREE.BufferGeometry();
   const posA = new THREE.BufferAttribute(shapes[0].slice(), 3);
@@ -215,7 +268,7 @@ async function start() {
         if (r > 0.5) discard;
         float a = smoothstep(0.5, 0.0, r);
         vec3 col = mix(uColorA, uColorB, step(0.72, vSeed));
-        gl_FragColor = vec4(col, a * vAlpha * 0.85);
+        gl_FragColor = vec4(col * 1.25, a * vAlpha * 0.9);
       }`
   });
   const points = new THREE.Points(geo, mat);
@@ -227,12 +280,39 @@ async function start() {
   document.body.prepend(canvas);
   root.classList.add("webgl");
 
+  // ---------- Постобработка: свечение + "пленка" (виньетка, цветной сдвиг по краям, зерно) ----------
+  const composer = new EffectComposer(renderer);
+  composer.addPass(new RenderPass(scene, camera));
+  const bloom = new UnrealBloomPass(new THREE.Vector2(innerWidth, innerHeight), isMobile ? .9 : 1.1, .45, .2);
+  composer.addPass(bloom);
+  const film = new ShaderPass({
+    uniforms: { tDiffuse: { value: null }, uTime: { value: 0 }, uShift: { value: .0015 } },
+    vertexShader: `varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
+    fragmentShader: `
+      uniform sampler2D tDiffuse; uniform float uTime, uShift; varying vec2 vUv;
+      float h(vec2 p){ return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453); }
+      void main(){
+        vec2 d = vUv - .5; float e = dot(d, d);
+        vec2 off = d * uShift * (1.0 + e * 8.0);
+        vec3 c = vec3(texture2D(tDiffuse, vUv + off).r, texture2D(tDiffuse, vUv).g, texture2D(tDiffuse, vUv - off).b);
+        c *= 1.0 - e * 0.9;
+        c += (h(vUv * 900.0 + fract(uTime)) - .5) * .035;
+        gl_FragColor = vec4(c, 1.0);
+      }`
+  });
+  composer.addPass(film);
+
+  let useComposer = true;
+
   // ---------- Раскладка ----------
   let viewW, viewH;
   function layout() {
     camera.aspect = innerWidth / innerHeight;
     camera.updateProjectionMatrix();
     renderer.setSize(innerWidth, innerHeight);
+    composer.setSize(innerWidth, innerHeight);
+    composer.setPixelRatio(dpr);
+    bgMat.uniforms.uAspect.value = camera.aspect;
     viewH = 2 * camera.position.z * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
     viewW = viewH * camera.aspect;
   }
@@ -267,10 +347,20 @@ async function start() {
   let running = true;
   document.addEventListener("visibilitychange", () => { running = !document.hidden; });
 
+  // защита от тормозов: если кадры долгие - отключаем тяжелые эффекты
+  let slowFrames = 0, lastT = 0, spin = 0;
+
   renderer.setAnimationLoop(() => {
     if (!running) return;
     const t = clock.getElapsedTime();
+    const dt = t - lastT; lastT = t;
+    if (t > 3 && useComposer) { slowFrames = dt > .045 ? slowFrames + 1 : Math.max(0, slowFrames - 1); if (slowFrames > 40) useComposer = false; }
     mat.uniforms.uTime.value = reduce ? 0 : t;
+    dustMat.uniforms.uTime.value = reduce ? 0 : t;
+    bgMat.uniforms.uTime.value = reduce ? 0 : t;
+    film.uniforms.uTime.value = t;
+    bgMat.uniforms.uScroll.value = scrollY / innerHeight * .12;
+    bgMat.uniforms.uMouse.value.set(mouse.x, mouse.y);
 
     // сборка частиц после заставки
     if (!reduce && mat.uniforms.uAssemble.value < 1 && !document.getElementById("loader")) {
@@ -307,8 +397,22 @@ async function start() {
 
     // плавный поворот за мышкой + легкое покачивание
     mouse.x += (mouse.nx - mouse.x) * .05; mouse.y += (mouse.ny - mouse.y) * .05;
-    group.rotation.y = mouse.x * .45 + (reduce ? 0 : Math.sin(t * .25) * .18);
-    group.rotation.x = -mouse.y * .18;
+    // кино-камера: при перетекании фигура делает оборот, а камера мягко подлетает ближе
+    const eased = smoothMix * smoothMix * (3 - 2 * smoothMix);
+    const targetSpin = (curIndex + eased) * Math.PI * 2;
+    spin = dbg !== null ? targetSpin : spin + (targetSpin - spin) * .06;
+    const bump = 4 * eased * (1 - eased);
+    group.rotation.y = spin + mouse.x * .45 + (reduce ? 0 : Math.sin(t * .25) * .18);
+    group.rotation.x = -mouse.y * .18 + bump * .25;
+    camera.position.z = 11 - bump * 2.2;
+    camera.position.x = mouse.x * .35; camera.position.y = mouse.y * .25;
+    camera.lookAt(0, 0, 0);
+    bloom.strength = (isMobile ? .9 : 1.1) + bump * .6;
+    film.uniforms.uShift.value = .0015 + bump * .004;
+
+    // пыль: параллакс при прокрутке
+    dust.position.y = scrollY / innerHeight * 1.4;
+    dust.rotation.y = mouse.x * .08;
 
     // частицы разлетаются от курсора
     ray.setFromCamera({ x: mouse.nx, y: mouse.ny }, camera);
@@ -317,7 +421,7 @@ async function start() {
       mat.uniforms.uMouse.value.copy(local);
     }
 
-    renderer.render(scene, camera);
+    if (useComposer) composer.render(); else renderer.render(scene, camera);
     if (location.search.includes("debug3d")) root.dataset.s3d = [!!sil, mat.uniforms.uAssemble.value.toFixed(2), op.toFixed(2), gx.toFixed(2), t.toFixed(1)].join("|");
   });
 }

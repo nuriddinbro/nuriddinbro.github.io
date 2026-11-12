@@ -48,7 +48,7 @@
     ctx.globalCompositeOperation = "source-over";
 
     // Сетка точек (при 3D-сцене не рисуем, чтобы не было каши)
-    if (document.documentElement.classList.contains("webgl")) { if (!reduce) requestAnimationFrame(frame); return; }
+    if (document.documentElement.classList.contains("webgl")) { running = false; return; } // 3D-сцена рисует свой фон
     const R = 160;
     for (let i = 0; i < dots.length; i += 2) {
       const x = dots[i], y = dots[i + 1];
