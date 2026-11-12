@@ -16,7 +16,7 @@
   const label = () => { btn.setAttribute("aria-pressed", String(on)); btn.querySelector("span").textContent = on ? "SOUND ON" : "SOUND OFF"; };
   label();
 
-  let ctx, master, wet, wind;
+  let ctx, master, wet, music;
 
   function build() {
     ctx = new AC();
@@ -28,19 +28,42 @@
     d1.connect(lp); lp.connect(fb); fb.connect(d1); lp.connect(master);
     wet = d1;
 
-    // Ветер: мягкий шум через фильтр, который медленно "гуляет"
-    const len = ctx.sampleRate * 4, buf = ctx.createBuffer(1, len, ctx.sampleRate), data = buf.getChannelData(0);
-    let last = 0;
-    for (let i = 0; i < len; i++) { const w = Math.random() * 2 - 1; last = (last + .02 * w) / 1.02; data[i] = last * 3.2; } // "коричневый" шум - мягкий
-    const src = ctx.createBufferSource(); src.buffer = buf; src.loop = true;
-    const bp = ctx.createBiquadFilter(); bp.type = "bandpass"; bp.frequency.value = 520; bp.Q.value = .6;
-    const lfo = ctx.createOscillator(); lfo.frequency.value = .07;
-    const lfoG = ctx.createGain(); lfoG.gain.value = 260; lfo.connect(lfoG); lfoG.connect(bp.frequency);
-    wind = ctx.createGain(); wind.gain.value = .0;
-    const lfo2 = ctx.createOscillator(); lfo2.frequency.value = .045;
-    const lfo2G = ctx.createGain(); lfo2G.gain.value = .012; lfo2.connect(lfo2G); lfo2G.connect(wind.gain);
-    src.connect(bp); bp.connect(wind); wind.connect(master);
-    src.start(); lfo.start(); lfo2.start();
+    // Фоновая мелодия: тихий "пианино"-перебор по аккордам Am - F - C - G
+    music = ctx.createGain(); music.gain.value = 0;
+    const tone = ctx.createBiquadFilter(); tone.type = "lowpass"; tone.frequency.value = 1900;
+    music.connect(tone); tone.connect(master); tone.connect(wet);
+    scheduler();
+  }
+
+  // Ноты в формате MIDI: 57 = A3, 60 = C4 ...
+  const midi = n => 440 * Math.pow(2, (n - 69) / 12);
+  const CHORDS = [[57, 60, 64, 69], [53, 57, 60, 65], [48, 52, 55, 60], [55, 59, 62, 67]];
+  const PATTERN = [0, 2, 3, 2, 1, 2, 3, 2];   // перебор: 8 нот на такт
+  const STEP = 60 / 66 / 2;                   // темп 66 ударов в минуту, восьмые
+  let nextT = 0, step = 0;
+
+  function pianoNote(f, t, vol, len) {
+    const o1 = ctx.createOscillator(); o1.type = "sine"; o1.frequency.value = f;
+    const o2 = ctx.createOscillator(); o2.type = "triangle"; o2.frequency.value = f * 2; o2.detune.value = 3;
+    const g2 = ctx.createGain(); g2.gain.value = .25;
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(vol, t + .012); g.gain.exponentialRampToValueAtTime(.0001, t + len);
+    o1.connect(g); o2.connect(g2); g2.connect(g); g.connect(music);
+    o1.start(t); o2.start(t); o1.stop(t + len + .05); o2.stop(t + len + .05);
+  }
+
+  function scheduler() {
+    setInterval(() => {
+      if (!on || !ctx || ctx.state !== "running") { nextT = 0; return; }
+      if (!nextT) nextT = ctx.currentTime + .1;
+      while (nextT < ctx.currentTime + .35) {
+        const bar = Math.floor(step / 8) % CHORDS.length, chord = CHORDS[bar], k = step % 8;
+        pianoNote(midi(chord[PATTERN[k]] + 12), nextT, k === 0 ? .05 : .035, 1.8);
+        if (k === 0) pianoNote(midi(chord[0] - 12), nextT, .06, 3.2);            // мягкий бас в начале такта
+        if (k === 4 && Math.random() < .5) pianoNote(midi(chord[3] + 12), nextT + STEP * .5, .025, 2); // редкое "украшение"
+        nextT += STEP; step++;
+      }
+    }, 90);
   }
 
   function fade(to) {
@@ -48,7 +71,10 @@
     master.gain.cancelScheduledValues(t);
     master.gain.setValueAtTime(master.gain.value, t);
     master.gain.linearRampToValueAtTime(to, t + 1.5);
-    wind.gain.setValueAtTime(to ? .03 : 0, t);
+    // мелодия нарастает очень плавно (4 секунды), чтобы не напугать
+    music.gain.cancelScheduledValues(t);
+    music.gain.setValueAtTime(music.gain.value, t);
+    music.gain.linearRampToValueAtTime(to ? .55 : 0, t + (to ? 4 : 1));
   }
 
   function start() {

@@ -67,8 +67,16 @@ main { position: relative; z-index: 1; }
 @keyframes live { 70%, 100% { box-shadow: 0 0 0 9px rgba(31,157,99,0); } }
 .title { font: 300 clamp(40px, 6vw, 92px)/1.02 var(--font); letter-spacing: -.035em; margin: 0; }
 .title .w { display: inline-block; white-space: nowrap; }
-.title .c { display: inline-block; opacity: 0; filter: blur(10px); transform: translateY(.35em) scale(1.08); }
-.title.play .c { animation: frost 1.2s cubic-bezier(.2,.8,.2,1) forwards; animation-delay: calc(var(--i) * 38ms + .5s); }
+.title .c { display: inline-block; opacity: 0; filter: blur(14px); transform: translateY(.6em) rotate(6deg) scale(1.15); }
+/* 1) буквы "намерзают" по одной; 2) потом раз в ~8 секунд по ним пробегает мягкая ледяная волна */
+.title.play .c {
+  animation: frost 1.3s cubic-bezier(.2,.8,.2,1) forwards, wave 8s ease-in-out infinite;
+  animation-delay: calc(var(--i) * 55ms + .3s), calc(var(--i) * 70ms + 3.5s);
+}
+@keyframes wave {
+  0%, 7%, 100% { transform: none; color: inherit; text-shadow: none; }
+  3.5% { transform: translateY(-.09em); color: #1c86b5; text-shadow: 0 0 22px rgba(28,134,181,.35); }
+}
 @keyframes frost { 60% { filter: blur(1px); } to { opacity: 1; filter: blur(0); transform: none; } }
 /* "портфолио": появляется последним, потом по нему периодически пробегает ледяной блик */
 .title em {
@@ -76,7 +84,7 @@ main { position: relative; z-index: 1; }
   background: linear-gradient(110deg, #14202b 0%, #1c86b5 30%, #d9f4ff 48%, #1c86b5 62%, #3b6f96 100%) 0 0 / 260% 100%;
   -webkit-background-clip: text; background-clip: text; color: transparent;
 }
-.title.play em { animation: emIn 1.4s cubic-bezier(.2,.8,.2,1) forwards, glint 7s ease-in-out infinite; animation-delay: calc(var(--i) * 38ms + .7s), calc(var(--i) * 38ms + 2.4s); }
+.title.play em { animation: emIn 1.6s cubic-bezier(.2,.8,.2,1) forwards, glint 6s ease-in-out infinite; animation-delay: calc(var(--i) * 55ms + .5s), calc(var(--i) * 55ms + 2.2s); }
 @keyframes emIn { from { opacity: 0; filter: blur(12px); transform: translateY(.25em); } to { opacity: 1; filter: blur(0); transform: none; } }
 @keyframes glint { 0%, 55% { background-position: 100% 0; } 85%, 100% { background-position: 0% 0; } }
 .hint { margin-top: 26px; font: 500 12px var(--mono); letter-spacing: .08em; color: var(--muted); }
