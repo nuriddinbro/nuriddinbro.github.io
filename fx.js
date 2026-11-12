@@ -86,6 +86,7 @@
     const ry = gsap.quickTo(holo, "rotateY", { duration: 1, ease: "power3" });
     const rx = gsap.quickTo(holo, "rotateX", { duration: 1, ease: "power3" });
     addEventListener("mousemove", e => {
+      if (root.classList.contains("webgl")) return; // при 3D-сцене плоская голограмма скрыта
       ry((e.clientX / innerWidth - .5) * 16);
       rx(-(e.clientY / innerHeight - .5) * 10);
     });
@@ -201,6 +202,30 @@
   }
   intro.add(headWords);
   document.addEventListener("langchange", () => { if (!document.getElementById("loader")) headWords(); });
+
+  // ===== Сцены-главы: кинополосы, номер, заголовок проявляется, потом все уходит =====
+  document.querySelectorAll(".chapter").forEach(ch => {
+    const stage = ch.querySelector(".chapter-stage");
+    const lb = { v: 0 };
+    const setLb = () => stage.style.setProperty("--lb", lb.v);
+    gsap.timeline({
+      scrollTrigger: {
+        trigger: ch, start: "top 70%", end: "bottom bottom", scrub: 1,
+        onEnter: () => document.dispatchEvent(new CustomEvent("chapter")),
+        onEnterBack: () => document.dispatchEvent(new CustomEvent("chapter"))
+      }
+    })
+      .to(lb, { v: 1, duration: .15, onUpdate: setLb }, 0)
+      .fromTo(ch.querySelector(".ch-num"), { opacity: 0, x: -30 }, { opacity: 1, x: 0, duration: .1 }, .12)
+      .fromTo(ch.querySelector(".ch-line"), { scaleX: 0 }, { scaleX: 1, duration: .12 }, .14)
+      .fromTo(ch.querySelector(".ch-title"),
+        { opacity: 0, y: 70, filter: "blur(16px)", letterSpacing: "0.14em" },
+        { opacity: 1, y: 0, filter: "blur(0px)", letterSpacing: "-0.02em", duration: .22, ease: "power2.out" }, .16)
+      .fromTo(ch.querySelector(".ch-sub"), { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: .12 }, .3)
+      .to([ch.querySelector(".ch-num"), ch.querySelector(".ch-title"), ch.querySelector(".ch-sub")],
+        { opacity: 0, y: -50, filter: "blur(10px)", duration: .15, stagger: .03 }, .78)
+      .to(lb, { v: 0, duration: .12, onUpdate: setLb }, .88);
+  });
 
   // ===== Портфолио: анимация содержимого при раскрытии =====
   // Каждый пример - своя анимация (timeline). Навели - играет, убрали - быстро откатывается.
@@ -347,5 +372,7 @@
     });
   }
 
-  addEventListener("load", () => ScrollTrigger.refresh());
+  addEventListener("load", () => {
+    ScrollTrigger.refresh();
+  });
 })();

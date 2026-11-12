@@ -321,16 +321,20 @@ async function start() {
 
   // ---------- Прокрутка: какая фигура и насколько перетекла ----------
   let curIndex = -1;
+  const chapters = [...document.querySelectorAll(".chapter")];
+  const clamp01 = v => Math.min(1, Math.max(0, v));
+  const sstep = (a, b, v) => { const x = clamp01((v - a) / (b - a)); return x * x * (3 - 2 * x); };
+  // Главы: фигура перетекает при входе в главу и выходит крупно в центр, пока глава на экране
   function scrollState() {
-    const y = scrollY + innerHeight * .5;
-    const tops = anchors.map(a => a ? a.getBoundingClientRect().top + scrollY : Infinity);
-    let i = 0;
-    while (i < tops.length - 1 && y >= tops[i + 1]) i++;
-    if (i >= shapes.length - 1) return { i: shapes.length - 2, f: 1, last: true };
-    const len = tops[i + 1] - tops[i];
-    const frac = Math.min(1, Math.max(0, (y - tops[i]) / len));
-    const f = Math.min(1, Math.max(0, (frac - .6) / .4)); // перетекает в конце раздела
-    return { i, f };
+    const y = scrollY, vh = innerHeight;
+    let c = null;
+    for (const ch of chapters) { const top = ch.getBoundingClientRect().top + y; if (top <= y + vh * .6) c = { el: ch, top, h: ch.offsetHeight }; }
+    if (!c) return { i: 0, f: 0, focus: 0, hero: y < vh * .6 };
+    const s = +c.el.dataset.shape;
+    const f = clamp01((y + vh * .6 - c.top) / (vh * .9));
+    const p = (y - c.top) / Math.max(1, c.h - vh);
+    const focus = sstep(-.35, .05, p) * (1 - sstep(.72, 1.02, p));
+    return { i: s - 1, f, focus, hero: false };
   }
 
   // ---------- Мышь ----------
@@ -382,12 +386,14 @@ async function start() {
     mat.uniforms.uMix.value = smoothMix;
 
     // положение: в шапке справа и ярко, дальше - сбоку и мягче
-    const inHero = curIndex === 0 && st.f < .05 && scrollY < innerHeight * .6;
+    const inHero = dbg !== null ? +dbg === 0 : st.hero;
+    const fo = dbg !== null ? (+dbg > 0 ? 1 : 0) : (st.focus || 0);
+    const L = (a, b) => a + (b - a) * fo;
     let tx, ty, ts, to;
     if (isMobile || camera.aspect < .9) {
-      tx = 0; ty = inHero ? viewH * .17 : 0; ts = inHero ? .62 : .7; to = inHero ? .55 : .3;
+      tx = 0; ty = inHero ? viewH * .17 : L(0, viewH * .08); ts = inHero ? .62 : L(.7, .9); to = inHero ? .55 : L(.28, .85);
     } else {
-      tx = viewW * (inHero ? .22 : .26); ty = inHero ? -.1 : 0; ts = inHero ? 1 : .85; to = inHero ? 1 : .42;
+      tx = inHero ? viewW * .22 : L(viewW * .26, viewW * .12); ty = inHero ? -.1 : L(0, .55); ts = inHero ? 1 : L(.85, 1.1); to = inHero ? 1 : L(.4, 1);
     }
     const k = dbg !== null ? 1 : .05;
     gx += (tx - gx) * k; gy += (ty - gy) * k; gs += (ts - gs) * k; op += (to - op) * k;
