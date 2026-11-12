@@ -15,7 +15,7 @@ const FOG = new THREE.Color("#dde4ea");
 
 let renderer;
 try {
-  renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
+  renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: "high-performance" });
 } catch (e) { renderer = null; }
 if (renderer) init();
 
@@ -46,8 +46,8 @@ function init() {
   const base = new THREE.IcosahedronGeometry(1.45, 1).toNonIndexed();
   const P = base.attributes.position;
   const glass = new THREE.MeshPhysicalMaterial({
-    color: "#ffffff", metalness: 0, roughness: .12, transmission: 1, thickness: .7, ior: 1.5,
-    iridescence: .55, iridescenceIOR: 1.3, clearcoat: 1, clearcoatRoughness: .06,
+    color: "#ffffff", metalness: 0, roughness: .2, transmission: 1, thickness: .6, ior: 1.45,
+    clearcoat: 1, clearcoatRoughness: .1,
     attenuationColor: new THREE.Color("#a9dcef"), attenuationDistance: 1.6,
     envMapIntensity: 1.5, flatShading: true, specularIntensity: 1
   });
@@ -170,12 +170,16 @@ function init() {
   const composer = new EffectComposer(renderer);
   composer.addPass(new RenderPass(scene, camera));
   const bloom = new UnrealBloomPass(new THREE.Vector2(innerWidth, innerHeight), .35, .6, .88);
-  if (!isMobile) composer.addPass(bloom);
+  // свечение не используем: на светлом фоне оно почти незаметно, а битые пиксели раздувало в черные пятна
   composer.addPass(new OutputPass());
 
+  let lastW = 0, lastH = 0;
   function resize() {
+    if (innerWidth === lastW && Math.abs(innerHeight - lastH) < 140 && lastW) return; // адресная строка на телефоне
+    lastW = innerWidth; lastH = innerHeight;
     camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix();
     renderer.setSize(innerWidth, innerHeight); composer.setSize(innerWidth, innerHeight);
+    composer.render();
   }
   resize(); addEventListener("resize", resize);
 
@@ -231,7 +235,7 @@ function init() {
     // осколки
     for (let k = 0; k < N; k++) {
       const s = shards[k], A = forms[i][k], B = forms[i + 1][k];
-      s.m.position.lerpVectors(A.p, B.p, f).addScaledVector(s.home, burst * .35 * (1 + s.rnd) + hoverAmt * .09 + ex * (.45 + s.rnd * .6));
+      s.m.position.lerpVectors(A.p, B.p, f).addScaledVector(s.home, burst * .15 * (1 + s.rnd) + hoverAmt * .09 + ex * (.45 + s.rnd * .6));
       qA.setFromEuler(A.r); qB.setFromEuler(B.r);
       s.m.quaternion.copy(tmpQ.slerpQuaternions(qA, qB, f));
       if (ex > .002) { s.m.rotateX(spin[k].x * ex * 2.5); s.m.rotateY(spin[k].y * ex * 2.5); } // осколки кружатся при разлете

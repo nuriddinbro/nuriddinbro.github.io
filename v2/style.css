@@ -25,7 +25,7 @@ p { margin: 0; }
 ul, ol { margin: 0; padding: 0; list-style: none; }
 ::selection { background: var(--ink); color: #fff; }
 
-#scene { position: fixed; inset: 0; width: 100% !important; height: 100% !important; z-index: 0; pointer-events: none; }
+#scene { position: fixed; inset: 0; width: 100% !important; height: 100% !important; z-index: 0; pointer-events: none; background: #dde4ea; }
 main { position: relative; z-index: 1; }
 
 /* Начальная заставка: белая "дымка", которая рассеивается */
@@ -55,7 +55,9 @@ main { position: relative; z-index: 1; }
 @keyframes tip { 50% { transform: translateY(4px); } }
 
 /* ===== Экраны ===== */
-.scene { min-height: 100vh; min-height: 100svh; display: flex; align-items: center; padding: 110px 6vw 90px; }
+.scene { min-height: 72vh; display: flex; align-items: center; padding: 70px 6vw; }
+#s0 { min-height: 100vh; min-height: 100svh; padding-top: 110px; }
+#s5 { min-height: 90vh; }
 .scene.right { justify-content: flex-end; }
 
 /* Шапка */
@@ -196,7 +198,8 @@ main { position: relative; z-index: 1; }
   .lang { margin-left: auto; }
   .hud { padding: 0 16px; }
   .hud-top { height: 62px; }
-  .scene, .scene.right { justify-content: center; padding: 90px 14px 80px; }
+  .scene, .scene.right { justify-content: center; padding: 48px 14px; min-height: 0; }
+  #s0 { padding-top: 90px; }
   .panel { padding: 26px 20px; background: rgba(255,255,255,.62); }
   .job { grid-template-columns: 1fr; }
   .j-when { grid-row: auto; }
