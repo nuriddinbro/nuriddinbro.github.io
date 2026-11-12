@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="ru" data-lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Нуриддин Ахмедов - клиентский сервис, QA, модерация, переводы</title>
+<meta name="description" content="9+ лет в клиентском сервисе: техподдержка, контроль качества, модерация контента, переводы RU-UZ, работа с данными. Ташкент, удаленная работа.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Нуриддин Ахмедов - клиентский сервис, QA, модерация, переводы">
+<meta property="og:description" content="9+ лет в клиентском сервисе. Открыт к удаленной работе и фрилансу.">
+<meta name="theme-color" content="#dde4ea">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%2314202b'/%3E%3Ctext x='32' y='42' font-family='Arial' font-size='24' font-weight='700' fill='%23dde4ea' text-anchor='middle'%3EНА%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Onest:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css?v=1">
+</head>
+<body>
+
+<!-- 3D-сцена (рисует app.js) -->
+<div class="veil" id="veil"><span class="veil-num" id="veilNum">0</span></div>
+
+<!-- HUD: интерфейс по углам экрана -->
+<header class="hud hud-top">
+  <a href="#s0" class="brand"><b>НА</b><span data-i18n="hero_name">Нуриддин Ахмедов</span></a>
+  <nav class="nav">
+    <a href="#s1" data-i18n="ch1_t">Опыт</a>
+    <a href="#s2" data-i18n="ch2_t">Портфолио</a>
+    <a href="#s3" data-i18n="ch3_t">Навыки</a>
+    <a href="#s4" data-i18n="ch4_t">Языки</a>
+    <a href="#s5" data-i18n="ch5_t">Контакты</a>
+  </nav>
+  <div class="lang" role="group" aria-label="Language">
+    <button type="button" data-set-lang="ru" aria-pressed="true">RU</button>
+    <button type="button" data-set-lang="en" aria-pressed="false">EN</button>
+  </div>
+</header>
+<div class="hud hud-bottom" aria-hidden="true">
+  <span class="counter"><b id="secNum">01</b> / 06</span>
+  <span class="rail"><i id="rail"></i></span>
+  <span class="scroll-tip" data-i18n="hud_scroll">листайте</span>
+</div>
+
+<main>
+
+  <!-- 01. ШАПКА -->
+  <section class="scene" id="s0">
+    <div class="intro">
+      <p class="eyebrow"><span class="live"></span><span data-i18n="hero_loc">Ташкент, Узбекистан · удаленно и фриланс</span></p>
+      <h1 class="title">
+        <span data-i18n="h_l1">Добро</span> <span data-i18n="h_l2">пожаловать</span><br>
+        <span data-i18n="h_l3a">в мое</span> <em data-i18n="h_l3">портфолио</em>.
+      </h1>
+      <p class="hint"><span data-i18n="hero_hint">прокрутите вниз - покажу, что умею</span> ↓</p>
+      <div class="actions">
+        <a href="#s5" class="btn btn-dark" data-i18n="hero_contact">Связаться</a>
+        <a href="../resume-ru.pdf" class="btn btn-glass" id="resumeBtn" data-base="../" download data-i18n="cv">Скачать резюме · PDF</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- 02. ОПЫТ -->
+  <section class="scene right" id="s1">
+    <div class="panel">
+      <p class="label">02 <span data-i18n="ch1_t">Опыт</span></p>
+      <h2 class="ptitle" data-i18n="ch1_s">9 лет на линии: от оператора до руководителя колл-центра</h2>
+      <p class="ptext" data-i18n="about_p1">Более 9 лет в клиентском сервисе компаний из сфер телекома, финтеха, e-commerce и доставки. Прошел путь от оператора до руководителя колл-центра: решал сложные обращения, запускал команду с нуля, внедрял стандарты, модерировал контент и локализовал клиентские коммуникации. Сейчас отвечаю за качество обслуживания в Yandex Eats.</p>
+      <ol class="jobs">
+        <li><button type="button" class="job"><span class="j-when" data-i18n="j1_when">Февраль 2024 - сейчас</span><span class="j-co">Yandex Eats</span><span class="j-role" data-i18n="j1_role">Специалист по контролю качества (QA)</span></button><p class="j-d" data-i18n="j1_d">Аудит чатов и звонков с клиентами, партнерами и курьерами по карте качества и базе знаний. Разбор ошибок, обратная связь и рекомендации операторам. Проверка заказов в админ-панели и CRM, локализация шаблонов ответов на узбекский язык.</p></li>
+        <li><button type="button" class="job"><span class="j-when" data-i18n="j2_when">Июнь 2023 - февраль 2024</span><span class="j-co">Uzum Technologies</span><span class="j-role" data-i18n="j2_role">Модератор контента</span></button><p class="j-d" data-i18n="j2_d">Модерация пользовательского контента на соответствие правилам платформы, своевременное удаление нарушений. Локализация макросов поддержки RU-UZ и UZ-RU.</p></li>
+        <li><button type="button" class="job"><span class="j-when" data-i18n="j3_when">Февраль 2023 - апрель 2023</span><span class="j-co">Fish and Bread</span><span class="j-role" data-i18n="j3_role">Руководитель колл-центра (Team Lead)</span></button><p class="j-d" data-i18n="j3_d">Запуск колл-центра с нуля: подбор и обучение команды, разработка стандартов обслуживания и контроль их выполнения.</p></li>
+        <li><button type="button" class="job"><span class="j-when" data-i18n="j4_when">Август 2022 - февраль 2023</span><span class="j-co">Uzum Nasiya</span><span class="j-role" data-i18n="j4_role">Старший оператор</span></button><p class="j-d" data-i18n="j4_d">Координация работы операторов, решение сложных и эскалированных обращений, контроль качества обслуживания.</p></li>
+        <li><button type="button" class="job"><span class="j-when" data-i18n="j5_when">Апрель 2021 - август 2022</span><span class="j-co">Click</span><span class="j-role" data-i18n="j5_role">Специалист технической поддержки</span></button><p class="j-d" data-i18n="j5_d">Поддержка клиентов платежной системы: решение технических вопросов и вопросов по платежам.</p></li>
+        <li><button type="button" class="job"><span class="j-when" data-i18n="j6_when">Февраль 2017 - октябрь 2020</span><span class="j-co">O'zbektelekom</span><span class="j-role" data-i18n="j6_role">Оператор 1 категории</span></button><p class="j-d" data-i18n="j6_d">Обработка обращений граждан, поступающих через порталы Президента РУз, Министерства связи и Государственной инспекции связи.</p></li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- 03. ПОРТФОЛИО -->
+  <section class="scene left" id="s2">
+    <div class="panel">
+      <p class="label">03 <span data-i18n="ch2_t">Портфолио</span></p>
+      <h2 class="ptitle" data-i18n="ch2_s">Как я проверяю качество и модерирую контент</h2>
+      <p class="note" data-i18n="pf_lead">Демо-кейсы на вымышленных данных: показывают подход к работе без информации о реальных клиентах и компаниях.</p>
+      <div class="tabs" role="tablist">
+        <button type="button" role="tab" aria-selected="true" data-tab="qa" data-i18n="pf1_t">Контроль качества</button>
+        <button type="button" role="tab" aria-selected="false" data-tab="mod" data-i18n="pf3_t">Модерация контента</button>
+        <button type="button" role="tab" aria-selected="false" data-tab="flow" data-i18n="pf2_t">Как я работаю</button>
+      </div>
+
+      <div class="tab on" data-pane="qa">
+        <p class="mini-head" data-i18n="q_head">Чат #QA-0417 · опоздание 40 мин</p>
+        <ul class="score-list">
+          <li><span data-i18n="q1">Приветствие и представление</span><b class="ok">✓</b></li>
+          <li><span data-i18n="q2">Выявление проблемы</span><b class="ok">✓</b></li>
+          <li><span data-i18n="q3">Решение по базе знаний</span><b class="ok">✓</b></li>
+          <li class="bad-row"><span><span data-i18n="q4">Тон и эмпатия</span> <small data-i18n="q4n">эмпатия не проявлена</small></span><b class="bad">−20</b></li>
+          <li><span data-i18n="q5">Корректное завершение</span><b class="ok">✓</b></li>
+        </ul>
+        <div class="bubbles">
+          <p class="was"><span data-i18n="was">Было</span><span data-i18n="was_t">Заказ задерживается. Ожидайте.</span></p>
+          <p class="now"><span data-i18n="now">Как надо</span><span data-i18n="now_t">Понимаю, как неприятно ждать. Курьер будет через 10 минут, а за задержку я начислил вам промокод.</span></p>
+        </div>
+        <p class="total"><span data-i18n="q_total">Итог</span><i><b style="--w:80%"></b></i><strong>80/100</strong></p>
+      </div>
+
+      <div class="tab" data-pane="mod">
+        <p class="mini-head"><span data-i18n="m_head">Очередь модерации</span> · 4/4</p>
+        <ul class="mod-list">
+          <li><span><b data-i18n="m1">Объявление с номером телефона продавца</b><small data-i18n="m1r">контакты вне платформы запрещены</small></span><em class="st bad" data-i18n="m_rej">Отклонено</em></li>
+          <li><span><b data-i18n="m2">Отзыв с оскорблениями</b><small data-i18n="m2r">нарушение правил общения</small></span><em class="st bad" data-i18n="m_del">Удалено</em></li>
+          <li><span><b data-i18n="m3">Фото не соответствует товару</b><small data-i18n="m3r">вводит покупателя в заблуждение</small></span><em class="st warn" data-i18n="m_fix">На доработку</em></li>
+          <li><span><b data-i18n="m4">Карточка товара заполнена верно</b><small data-i18n="m4r">нарушений нет</small></span><em class="st ok" data-i18n="m_ok">Одобрено</em></li>
+        </ul>
+      </div>
+
+      <div class="tab" data-pane="flow">
+        <ol class="flow">
+          <li><b data-i18n="s1">Выборка</b><span data-i18n="s1d">Беру обращения из разных каналов, смен и тематик.</span></li>
+          <li><b data-i18n="s2">Оценка</b><span data-i18n="s2d">Проверяю по карте качества, стандартам и базе знаний.</span></li>
+          <li><b data-i18n="s3">Анализ</b><span data-i18n="s3d">Ищу повторяющиеся ошибки, а не разовые промахи.</span></li>
+          <li><b data-i18n="s4">Обратная связь</b><span data-i18n="s4d">Объясняю ошибку и показываю, как сделать правильно.</span></li>
+          <li><b data-i18n="s5">Контроль</b><span data-i18n="s5d">Проверяю, что результат закрепился в работе.</span></li>
+        </ol>
+      </div>
+    </div>
+  </section>
+
+  <!-- 04. НАВЫКИ -->
+  <section class="scene right" id="s3">
+    <div class="panel">
+      <p class="label">04 <span data-i18n="ch3_t">Навыки</span></p>
+      <h2 class="ptitle"><span class="q">HR:</span> <span data-i18n="t0">Какими навыками вы владеете?</span></h2>
+      <div class="sk">
+        <p class="sk-h" data-i18n="sk1_t">качество и сервис</p>
+        <ul class="chips"><li data-i18n="sk1_1">Аудит чатов и звонков</li><li data-i18n="sk1_2">Карта оценки качества</li><li data-i18n="sk1_3">Обратная связь</li><li data-i18n="sk1_4">Стандарты обслуживания</li><li data-i18n="sk1_5">Обучение и адаптация</li><li data-i18n="sk1_6">Модерация контента</li><li data-i18n="sk1_7">Перевод RU-UZ</li></ul>
+        <p class="sk-h" data-i18n="sk2_t">данные и инструменты</p>
+        <ul class="chips"><li>CRM</li><li data-i18n="sk2_2">Админ-панели</li><li>Google Sheets</li><li>Excel</li><li data-i18n="sk2_5">Отчеты</li></ul>
+        <p class="sk-h" data-i18n="sk3_t">техника</p>
+        <ul class="chips"><li>Windows</li><li data-i18n="sk3_1">Настройка рабочих мест</li><li data-i18n="sk3_2">Установка ПО и драйверов</li><li data-i18n="sk3_3">Удаленная поддержка</li><li>AnyDesk</li><li>RDP</li><li data-i18n="sk3_5">Системное администрирование (изучаю)</li></ul>
+      </div>
+      <p class="answer"><b>✓</b> <span data-i18n="t1">навыки для качественного выполнения задач: в наличии</span><br><b class="soft">↻</b> <span data-i18n="t3">обновляю память и обучаюсь...</span></p>
+    </div>
+  </section>
+
+  <!-- 05. ЯЗЫКИ -->
+  <section class="scene left" id="s4">
+    <div class="panel">
+      <p class="label">05 <span data-i18n="ch4_t">Языки</span></p>
+      <h2 class="ptitle" data-i18n="ch4_s">Говорю с клиентами на их языке</h2>
+      <ul class="langs">
+        <li style="--w:100%"><span class="code">UZ</span><span data-i18n="l_uz">Узбекский</span><small data-i18n="l_uz_l">родной</small><i><b></b></i></li>
+        <li style="--w:90%"><span class="code">RU</span><span data-i18n="l_ru">Русский</span><small data-i18n="l_ru_l">свободно, C1</small><i><b></b></i></li>
+        <li style="--w:70%"><span class="code">KZ</span><span data-i18n="l_kz">Казахский</span><small data-i18n="l_kz_l">выше среднего, B2</small><i><b></b></i></li>
+        <li style="--w:23%"><span class="code">EN</span><span data-i18n="l_en">Английский</span><small data-i18n="l_en_l">базовый, A2</small><i><b></b></i></li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- 06. КОНТАКТЫ -->
+  <section class="scene right" id="s5">
+    <div class="panel">
+      <p class="label">06 <span data-i18n="ch5_t">Контакты</span></p>
+      <h2 class="ptitle big"><span data-i18n="ct_h1">Давайте</span> <span data-i18n="ct_h2">работать</span> <span data-i18n="ct_h3">вместе</span>.</h2>
+      <p class="ptext" data-i18n="ct_lead">Открыт к интересным предложениям. Напишите - отвечу в течение дня.</p>
+      <div class="contacts">
+        <a href="mailto:nuriddinahi@gmail.com"><small data-i18n="ct_email">Почта</small><b>nuriddinahi@gmail.com</b><span>→</span></a>
+        <a href="https://t.me/itswest" target="_blank" rel="noopener"><small>Telegram</small><b>@itswest</b><span>→</span></a>
+        <a href="https://wa.me/itswestbro" target="_blank" rel="noopener"><small>WhatsApp</small><b>@itswestbro</b><span>→</span></a>
+      </div>
+      <p class="foot">© 2026 · by <b>West</b></p>
+    </div>
+  </section>
+
+</main>
+
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}</script>
+<script src="../script.js?v=41"></script>
+<script src="ui.js?v=1"></script>
+<script type="module" src="app.js?v=1"></script>
+</body>
+</html>

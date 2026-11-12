@@ -20,6 +20,7 @@ const EN = {
   ch3_t: "Skills", ch3_s: "What I can do and how fast I learn",
   ch4_t: "Languages", ch4_s: "I speak with customers in their language",
   ch5_t: "Contact", ch5_s: "The next step is yours",
+  hud_scroll: "scroll",
   hero_hint: "scroll down - I will show you what I can do",
   cv: "Download CV · PDF",
   stat_years: "years in customer service",
@@ -183,7 +184,7 @@ function setLang(lang) {
   });
   try { localStorage.setItem("lang", lang); } catch (e) {}
   const cvBtn = document.getElementById("resumeBtn");
-  if (cvBtn) cvBtn.setAttribute("href", lang === "en" ? "resume-en.pdf" : "resume-ru.pdf");
+  if (cvBtn) cvBtn.setAttribute("href", (cvBtn.dataset.base || "") + (lang === "en" ? "resume-en.pdf" : "resume-ru.pdf"));
   document.dispatchEvent(new CustomEvent("langchange", { detail: lang }));
 }
 
