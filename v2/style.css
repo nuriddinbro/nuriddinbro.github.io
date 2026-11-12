@@ -204,6 +204,19 @@ main { position: relative; z-index: 1; }
   .contacts a { grid-template-columns: 74px 1fr auto; }
   .rail { max-width: 160px; }
 }
+/* Свой курсор и морозный след */
+html.cur-on, html.cur-on a, html.cur-on button { cursor: none; }
+.frost { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 40; pointer-events: none; }
+.cur { position: fixed; inset: 0; z-index: 60; pointer-events: none; }
+.cur-dot, .cur-ring { position: fixed; top: 0; left: 0; display: block; border-radius: 50%; }
+.cur-dot { width: 6px; height: 6px; margin: -3px 0 0 -3px; background: var(--ink); }
+.cur-ring { width: 34px; height: 34px; margin: -17px 0 0 -17px; border: 1px solid rgba(20,32,43,.55); transition: width .3s, height .3s, margin .3s, background .3s, border-color .3s; display: grid; place-items: center; }
+.cur-ring span { font: 600 8px var(--mono); letter-spacing: .14em; color: var(--ink); opacity: 0; transition: opacity .2s; }
+.cur.hover .cur-ring { width: 54px; height: 54px; margin: -27px 0 0 -27px; background: rgba(255,255,255,.35); }
+.cur.crystal .cur-ring { width: 74px; height: 74px; margin: -37px 0 0 -37px; background: rgba(255,255,255,.45); border-color: var(--accent); backdrop-filter: blur(4px); }
+.cur.crystal .cur-ring span { opacity: 1; }
+.cur.down .cur-ring { width: 24px; height: 24px; margin: -12px 0 0 -12px; }
+
 /* Кнопка звука */
 .snd { display: inline-flex; align-items: center; gap: 8px; border: 1px solid var(--line); background: transparent; cursor: pointer; padding: 7px 10px; font: 600 10px var(--mono); letter-spacing: .12em; color: var(--muted); }
 .snd i { display: inline-flex; align-items: flex-end; gap: 2px; height: 10px; }

@@ -96,6 +96,29 @@
     fade(on ? .9 : 0);
   });
 
+  // Звон стекла при разлете кристалла: россыпь высоких "дзинь" + легкий хруст
+  function shatter() {
+    if (!on || !ctx) return;
+    ctx.resume();
+    const t0 = ctx.currentTime;
+    for (let k = 0; k < 9; k++) {
+      const t = t0 + k * .035 + Math.random() * .03;
+      const f = 1800 + Math.random() * 3400;
+      const o = ctx.createOscillator(); o.type = "sine"; o.frequency.value = f;
+      const g = ctx.createGain(); g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(.03 * (1 - k / 12), t + .004); g.gain.exponentialRampToValueAtTime(.0001, t + .5 + Math.random() * .6);
+      o.connect(g); g.connect(master); g.connect(wet); o.start(t); o.stop(t + 1.2);
+    }
+    const len = ctx.sampleRate * .25, b = ctx.createBuffer(1, len, ctx.sampleRate), d = b.getChannelData(0);
+    for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 4);
+    const n = ctx.createBufferSource(); n.buffer = b;
+    const hp = ctx.createBiquadFilter(); hp.type = "highpass"; hp.frequency.value = 3500;
+    const ng = ctx.createGain(); ng.gain.value = .05;
+    n.connect(hp); hp.connect(ng); ng.connect(master); n.start(t0);
+    // и тихий "собрался обратно" через полсекунды
+    setTimeout(() => chime({ detail: 0 }), 650);
+  }
+
   document.addEventListener("section", chime);
+  document.addEventListener("crystal", shatter);
   document.querySelectorAll("a, button, .chips li").forEach(el => el.addEventListener("mouseenter", tick));
 })();

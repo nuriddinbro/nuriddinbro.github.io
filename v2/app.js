@@ -189,6 +189,26 @@ function init() {
     return mids.length - 1;
   }
   const mouse = { x: 0, y: 0, tx: 0, ty: 0 };
+
+  // ---------- Интерактив: наведение и клик по кристаллу ----------
+  const ray = new THREE.Raycaster(), ndc = new THREE.Vector2(9, 9);
+  const meshes = shards.map(s => s.m);
+  let hover = false, hoverAmt = 0, ex = 0, exV = 0;
+  const spin = shards.map(() => new THREE.Vector3((Math.random() - .5) * 2, (Math.random() - .5) * 2, (Math.random() - .5) * 2));
+  addEventListener("pointermove", e => { ndc.set(e.clientX / innerWidth * 2 - 1, -(e.clientY / innerHeight) * 2 + 1); }, { passive: true });
+  const overUI = el => el && el.closest && el.closest("a, button, .panel, .hud, .intro > *, input");
+  addEventListener("pointerdown", e => {
+    if (overUI(e.target) || !hover) return;
+    exV += 6; // осколки разлетаются
+    document.dispatchEvent(new CustomEvent("crystal"));
+  });
+  // на телефоне: тап по пустому месту рядом с кристаллом
+  addEventListener("touchend", e => {
+    const tch = e.changedTouches[0]; if (!tch || overUI(e.target)) return;
+    ndc.set(tch.clientX / innerWidth * 2 - 1, -(tch.clientY / innerHeight) * 2 + 1);
+    ray.setFromCamera(ndc, camera);
+    if (ray.intersectObjects(meshes, false).length) { exV += 6; document.dispatchEvent(new CustomEvent("crystal")); }
+  }, { passive: true });
   addEventListener("pointermove", e => { mouse.tx = e.clientX / innerWidth - .5; mouse.ty = e.clientY / innerHeight - .5; }, { passive: true });
 
   // ---------- Цикл ----------
@@ -211,21 +231,32 @@ function init() {
     // осколки
     for (let k = 0; k < N; k++) {
       const s = shards[k], A = forms[i][k], B = forms[i + 1][k];
-      s.m.position.lerpVectors(A.p, B.p, f).addScaledVector(s.home, burst * .35 * (1 + s.rnd));
+      s.m.position.lerpVectors(A.p, B.p, f).addScaledVector(s.home, burst * .35 * (1 + s.rnd) + hoverAmt * .09 + ex * (.45 + s.rnd * .6));
       qA.setFromEuler(A.r); qB.setFromEuler(B.r);
       s.m.quaternion.copy(tmpQ.slerpQuaternions(qA, qB, f));
+      if (ex > .002) { s.m.rotateX(spin[k].x * ex * 2.5); s.m.rotateY(spin[k].y * ex * 2.5); } // осколки кружатся при разлете
       if (!reduce) s.m.position.y += Math.sin(t * .8 + k) * .02 * (i > 0 || f > 0 ? 1 : .3);
     }
     // появление кристалла
     const e = 1 - Math.pow(1 - intro, 3);
     crystal.scale.setScalar(.6 + .4 * e);
+
+    // наведение: луч из курсора в кристалл
+    ray.setFromCamera(ndc, camera);
+    const h = ray.intersectObjects(meshes, false).length > 0;
+    if (h !== hover) { hover = h; document.dispatchEvent(new CustomEvent("crystalhover", { detail: h })); }
+    hoverAmt += ((hover ? 1 : 0) - hoverAmt) * .08;
+    // разлет по клику: упругая "пружина" возвращает осколки на место
+    exV += (-ex * 38 - exV * 5.5) * dt;
+    ex = Math.max(-.1, ex + exV * dt);
+
     crystal.rotation.y = (reduce ? 0 : t * .12) + prog * .9 + mouse.x * .4;
     crystal.rotation.x = mouse.y * .2;
     const sx = side[i] + (side[i + 1] - side[i]) * f;
     const wide = camera.aspect > 1.1;
     crystal.position.x = wide ? sx * Math.min(2.4, camera.aspect * 1.25) : 0;
     crystal.position.y = wide ? 0 : 1.1;
-    glow.intensity = 4 + Math.sin(t * 1.4) * 1.2 + burst * 4;
+    glow.intensity = 4 + Math.sin(t * 1.4) * 1.2 + burst * 4 + hoverAmt * 3 + ex * 14;
     core.rotation.y = t * .2;
 
     // камера
