@@ -21,36 +21,46 @@
     const fb = ctx.createGain(); fb.gain.value = .35;
     delay.connect(fb); fb.connect(delay); delay.connect(master);
 
-    // Эмбиент: аккорд из тихих синусов через фильтр, который медленно "дышит"
-    const filter = ctx.createBiquadFilter(); filter.type = "lowpass"; filter.frequency.value = 700; filter.Q.value = .7;
-    const lfo = ctx.createOscillator(); lfo.frequency.value = .05;
-    const lfoGain = ctx.createGain(); lfoGain.gain.value = 350;
-    lfo.connect(lfoGain); lfoGain.connect(filter.frequency); lfo.start();
-    const pad = ctx.createGain(); pad.gain.value = .5;
-    filter.connect(pad); pad.connect(master); pad.connect(delay);
-    [110, 164.81, 246.94, 329.63].forEach((f, i) => {
-      [-4, 4].forEach(det => {
-        const o = ctx.createOscillator(); o.type = i % 2 ? "triangle" : "sine";
-        o.frequency.value = f; o.detune.value = det;
-        const g = ctx.createGain(); g.gain.value = .06 / (i + 1);
-        o.connect(g); g.connect(filter); o.start();
-      });
-    });
     master.delay = delay;
+
+    // Фон: "музыкальная шкатулка" - редкие тихие ноты в случайном порядке, без гула
+    const SCALE = [440, 523.25, 587.33, 659.25, 783.99, 880, 1046.5];
+    (function loop() {
+      if (on) {
+        const t = ctx.currentTime;
+        const n = SCALE[(Math.random() * SCALE.length) | 0];
+        softNote(n, t, .028);
+        if (Math.random() < .3) softNote(n * 1.5 > 1100 ? n / 2 : n * 1.5, t + .25, .018);
+      }
+      setTimeout(loop, 1800 + Math.random() * 2400);
+    })();
   }
 
-  function whoosh() {
+  function softNote(f, t, vol) {
+    const o = ctx.createOscillator(); o.type = "sine"; o.frequency.value = f;
+    const lp = ctx.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.value = 2200;
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(vol, t + .04); g.gain.exponentialRampToValueAtTime(.0001, t + 3.2);
+    o.connect(lp); lp.connect(g); g.connect(master); g.connect(master.delay);
+    o.start(t); o.stop(t + 3.3);
+  }
+
+  // Хрустальный "дзинь": у каждой главы своя нота (пентатоника по восходящей)
+  const NOTES = [523.25, 587.33, 659.25, 783.99, 880.0];
+  let lastChime = 0;
+  function chime(e) {
     if (!on) return;
-    const t = ctx.currentTime, len = 1.4;
-    const buf = ctx.createBuffer(1, ctx.sampleRate * len, ctx.sampleRate);
-    const d = buf.getChannelData(0);
-    for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
-    const src = ctx.createBufferSource(); src.buffer = buf;
-    const bp = ctx.createBiquadFilter(); bp.type = "bandpass"; bp.Q.value = 1.2;
-    bp.frequency.setValueAtTime(250, t); bp.frequency.exponentialRampToValueAtTime(2400, t + len * .6); bp.frequency.exponentialRampToValueAtTime(600, t + len);
-    const g = ctx.createGain(); g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(.28, t + len * .45); g.gain.linearRampToValueAtTime(0, t + len);
-    src.connect(bp); bp.connect(g); g.connect(master); g.connect(master.delay);
-    src.start(t); src.stop(t + len);
+    const t = ctx.currentTime;
+    if (t - lastChime < .6) return; // не чаще раза в полсекунды
+    lastChime = t;
+    const f = NOTES[((e && e.detail) || 0) % NOTES.length];
+    [[1, .07, 2.6], [2.01, .025, 1.6], [3.0, .012, 1.0]].forEach(([mult, vol, len]) => {
+      const o = ctx.createOscillator(); o.type = "sine"; o.frequency.value = f * mult;
+      const g = ctx.createGain();
+      g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(vol, t + .02); g.gain.exponentialRampToValueAtTime(.0001, t + len);
+      o.connect(g); g.connect(master); g.connect(master.delay);
+      o.start(t); o.stop(t + len + .05);
+    });
   }
 
   function tick() {
@@ -69,6 +79,6 @@
     master.gain.cancelScheduledValues(ctx.currentTime);
     master.gain.linearRampToValueAtTime(on ? .55 : 0, ctx.currentTime + 1.2);
   });
-  document.addEventListener("chapter", whoosh);
+  document.addEventListener("chapter", chime);
   document.querySelectorAll("a, button, .pf").forEach(el => el.addEventListener("mouseenter", tick));
 })();

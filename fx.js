@@ -41,7 +41,7 @@
   // Плавная прокрутка
   let lenis = null;
   if (window.Lenis) {
-    lenis = new Lenis({ duration: 1.15, smoothWheel: true });
+    lenis = new Lenis({ lerp: .11, smoothWheel: true, wheelMultiplier: .95 });
     lenis.on("scroll", ScrollTrigger.update);
     gsap.ticker.add(t => lenis.raf(t * 1000));
     gsap.ticker.lagSmoothing(0);
@@ -204,28 +204,48 @@
   document.addEventListener("langchange", () => { if (!document.getElementById("loader")) headWords(); });
 
   // ===== Сцены-главы: кинополосы, номер, заголовок проявляется, потом все уходит =====
-  document.querySelectorAll(".chapter").forEach(ch => {
+  const chapterEls = [...document.querySelectorAll(".chapter")];
+  chapterEls.forEach((ch, idx) => {
     const stage = ch.querySelector(".chapter-stage");
     const lb = { v: 0 };
     const setLb = () => stage.style.setProperty("--lb", lb.v);
+    const ping = () => document.dispatchEvent(new CustomEvent("chapter", { detail: idx }));
+    // Текст полностью виден в "кадре" (там, куда доводит прокрутка), уходит только в самом конце главы
     gsap.timeline({
-      scrollTrigger: {
-        trigger: ch, start: "top 70%", end: "bottom bottom", scrub: 1,
-        onEnter: () => document.dispatchEvent(new CustomEvent("chapter")),
-        onEnterBack: () => document.dispatchEvent(new CustomEvent("chapter"))
-      }
+      scrollTrigger: { trigger: ch, start: "top 75%", end: "bottom bottom", scrub: .6, onEnter: ping, onEnterBack: ping }
     })
-      .to(lb, { v: 1, duration: .15, onUpdate: setLb }, 0)
-      .fromTo(ch.querySelector(".ch-num"), { opacity: 0, x: -30 }, { opacity: 1, x: 0, duration: .1 }, .12)
-      .fromTo(ch.querySelector(".ch-line"), { scaleX: 0 }, { scaleX: 1, duration: .12 }, .14)
+      .to(lb, { v: 1, duration: .22, onUpdate: setLb }, 0)
+      .fromTo(ch.querySelector(".ch-num"), { opacity: 0, x: -30 }, { opacity: 1, x: 0, duration: .12 }, .22)
+      .fromTo(ch.querySelector(".ch-line"), { scaleX: 0 }, { scaleX: 1, duration: .14 }, .24)
       .fromTo(ch.querySelector(".ch-title"),
         { opacity: 0, y: 70, filter: "blur(16px)", letterSpacing: "0.14em" },
-        { opacity: 1, y: 0, filter: "blur(0px)", letterSpacing: "-0.02em", duration: .22, ease: "power2.out" }, .16)
-      .fromTo(ch.querySelector(".ch-sub"), { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: .12 }, .3)
+        { opacity: 1, y: 0, filter: "blur(0px)", letterSpacing: "-0.02em", duration: .26, ease: "power2.out" }, .28)
+      .fromTo(ch.querySelector(".ch-sub"), { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: .14 }, .44)
       .to([ch.querySelector(".ch-num"), ch.querySelector(".ch-title"), ch.querySelector(".ch-sub")],
-        { opacity: 0, y: -50, filter: "blur(10px)", duration: .15, stagger: .03 }, .78)
-      .to(lb, { v: 0, duration: .12, onUpdate: setLb }, .88);
+        { opacity: 0, y: -50, filter: "blur(10px)", duration: .1, stagger: .02 }, .88)
+      .to(lb, { v: 0, duration: .08, onUpdate: setLb }, .92);
   });
+
+  // Мягкая доводка: остановились посреди главы - страница докатывается до красивого кадра
+  if (lenis) {
+    let idle, snapping = false;
+    const snap = () => {
+      if (snapping) return;
+      const y = scrollY, vh = innerHeight;
+      for (const ch of chapterEls) {
+        const top = ch.getBoundingClientRect().top + y;
+        const frameY = top + (ch.offsetHeight - vh) * .45;
+        const d = Math.abs(y - frameY);
+        if (d > 4 && d < vh * .25) {
+          snapping = true;
+          lenis.scrollTo(frameY, { duration: .9, easing: t => 1 - Math.pow(1 - t, 3), onComplete: () => { snapping = false; } });
+          setTimeout(() => { snapping = false; }, 1200);
+          break;
+        }
+      }
+    };
+    lenis.on("scroll", () => { clearTimeout(idle); idle = setTimeout(snap, 180); });
+  }
 
   // ===== Портфолио: анимация содержимого при раскрытии =====
   // Каждый пример - своя анимация (timeline). Навели - играет, убрали - быстро откатывается.

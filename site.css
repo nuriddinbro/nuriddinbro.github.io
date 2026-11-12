@@ -623,7 +623,7 @@ html.js.anim .langs b { transform: scaleX(0); }
 }
 
 /* ===== Сцены-главы (сайт-фильм) ===== */
-.chapter { position: relative; height: 230vh; }
+.chapter { position: relative; height: 165vh; }
 .chapter-stage {
   position: sticky; top: 0; height: 100vh; height: 100svh; overflow: hidden; pointer-events: none;
   display: flex; flex-direction: column; justify-content: flex-end; padding: 0 6vw 13vh; --lb: 0;
@@ -639,7 +639,7 @@ html.js.anim .langs b { transform: scaleX(0); }
 .ch-title { position: relative; z-index: 2; font: 800 italic clamp(56px, 11vw, 170px)/.9 var(--display); letter-spacing: -.02em; margin: 0; text-shadow: 0 10px 60px rgba(0,0,0,.6); }
 .ch-sub { position: relative; z-index: 2; margin: 18px 0 0; font: 500 13px var(--mono); text-transform: uppercase; letter-spacing: .14em; color: #c4d2dc; max-width: 520px; }
 html.anim .chapter-stage .ch-num, html.anim .chapter-stage .ch-title, html.anim .chapter-stage .ch-sub { opacity: 0; }
-@media (max-width: 640px) { .chapter { height: 190vh; } .chapter-stage { padding: 0 16px 14vh; } .ch-sub { font-size: 11px; } }
+@media (max-width: 640px) { .chapter { height: 145vh; } .chapter-stage { padding: 0 16px 14vh; } .ch-sub { font-size: 11px; } }
 
 /* Кнопка звука */
 .snd {
