@@ -64,7 +64,19 @@ main { position: relative; z-index: 1; }
 .live { width: 7px; height: 7px; border-radius: 50%; background: var(--ok); box-shadow: 0 0 0 0 rgba(31,157,99,.5); animation: live 2.4s infinite; }
 @keyframes live { 70%, 100% { box-shadow: 0 0 0 9px rgba(31,157,99,0); } }
 .title { font: 300 clamp(40px, 6vw, 92px)/1.02 var(--font); letter-spacing: -.035em; margin: 0; }
-.title em { font-style: normal; font-weight: 600; background: linear-gradient(90deg, #14202b, #1c86b5 60%, #6a8fb3); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.title .w { display: inline-block; white-space: nowrap; }
+.title .c { display: inline-block; opacity: 0; filter: blur(10px); transform: translateY(.35em) scale(1.08); }
+.title.play .c { animation: frost 1.2s cubic-bezier(.2,.8,.2,1) forwards; animation-delay: calc(var(--i) * 38ms + .5s); }
+@keyframes frost { 60% { filter: blur(1px); } to { opacity: 1; filter: blur(0); transform: none; } }
+/* "портфолио": появляется последним, потом по нему периодически пробегает ледяной блик */
+.title em {
+  font-style: normal; font-weight: 600; display: inline-block; opacity: 0; filter: blur(12px);
+  background: linear-gradient(110deg, #14202b 0%, #1c86b5 30%, #d9f4ff 48%, #1c86b5 62%, #3b6f96 100%) 0 0 / 260% 100%;
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+.title.play em { animation: emIn 1.4s cubic-bezier(.2,.8,.2,1) forwards, glint 7s ease-in-out infinite; animation-delay: calc(var(--i) * 38ms + .7s), calc(var(--i) * 38ms + 2.4s); }
+@keyframes emIn { from { opacity: 0; filter: blur(12px); transform: translateY(.25em); } to { opacity: 1; filter: blur(0); transform: none; } }
+@keyframes glint { 0%, 55% { background-position: 100% 0; } 85%, 100% { background-position: 0% 0; } }
 .hint { margin-top: 26px; font: 500 12px var(--mono); letter-spacing: .08em; color: var(--muted); }
 .actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 34px; }
 .btn { display: inline-flex; align-items: center; height: 50px; padding: 0 26px; text-decoration: none; font: 600 11px var(--mono); letter-spacing: .16em; text-transform: uppercase; transition: background .3s, color .3s, transform .3s; }
@@ -192,7 +204,18 @@ main { position: relative; z-index: 1; }
   .contacts a { grid-template-columns: 74px 1fr auto; }
   .rail { max-width: 160px; }
 }
+/* Кнопка звука */
+.snd { display: inline-flex; align-items: center; gap: 8px; border: 1px solid var(--line); background: transparent; cursor: pointer; padding: 7px 10px; font: 600 10px var(--mono); letter-spacing: .12em; color: var(--muted); }
+.snd i { display: inline-flex; align-items: flex-end; gap: 2px; height: 10px; }
+.snd i b { width: 2px; height: 3px; background: currentColor; }
+.snd[aria-pressed="true"] { color: var(--ink); }
+.snd[aria-pressed="true"] i b { animation: eq 1s ease-in-out infinite; }
+.snd[aria-pressed="true"] i b:nth-child(2) { animation-delay: .2s; } .snd[aria-pressed="true"] i b:nth-child(3) { animation-delay: .4s; }
+@keyframes eq { 50% { height: 10px; } }
+@media (max-width: 860px) { .snd span { display: none; } }
+
 @media (prefers-reduced-motion: reduce) {
+  .title .c, .title em { opacity: 1; filter: none; transform: none; animation: none !important; }
   .panel, .intro > * { opacity: 1; transform: none; transition: none; }
   .panel.in > * { animation: none; }
 }

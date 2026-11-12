@@ -111,6 +111,61 @@ function init() {
   const snow = new THREE.Points(snowGeo, new THREE.PointsMaterial({ map: sprite, color: "#ffffff", size: .07, transparent: true, opacity: .85, depthWrite: false, fog: true }));
   scene.add(snow);
 
+  // ---------- Глубина фона ----------
+  // 1) Далекие кристаллы, парящие в тумане
+  const farGroup = new THREE.Group(); scene.add(farGroup);
+  const farMat = new THREE.MeshPhysicalMaterial({ color: "#ffffff", roughness: .25, metalness: 0, clearcoat: 1, envMapIntensity: 1.2, flatShading: true, transparent: true, opacity: .9 });
+  const farEdge = new THREE.LineBasicMaterial({ color: "#ffffff", transparent: true, opacity: .4, fog: true });
+  const FAR = isMobile ? 10 : 22, far = [];
+  for (let k = 0; k < FAR; k++) {
+    const g = Math.random() < .5 ? new THREE.OctahedronGeometry(rnd(.25, .8)) : new THREE.IcosahedronGeometry(rnd(.25, .7), 0);
+    g.scale(1, rnd(1.2, 2.2), 1); // вытянутые, как ледяные кристаллы
+    const m = new THREE.Mesh(g, farMat);
+    m.add(new THREE.LineSegments(new THREE.EdgesGeometry(g), farEdge));
+    m.position.set(rnd(-16, 16), rnd(-5, 6), rnd(-24, -7));
+    m.rotation.set(rnd(0, 3), rnd(0, 3), rnd(0, 3));
+    farGroup.add(m);
+    far.push({ m, y: m.position.y, sp: rnd(.1, .35), ph: rnd(0, 6) });
+  }
+
+  // 2) Медленно плывущие слои облаков (процедурный шум)
+  const cloudMat = (seed, op) => new THREE.ShaderMaterial({
+    transparent: true, depthWrite: false, fog: false,
+    uniforms: { uTime: { value: 0 }, uSeed: { value: seed }, uOp: { value: op } },
+    vertexShader: `varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
+    fragmentShader: `
+      varying vec2 vUv; uniform float uTime, uSeed, uOp;
+      float h(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7)) + uSeed) * 43758.5453); }
+      float n(vec2 p){ vec2 i = floor(p), f = fract(p); f = f*f*(3.0-2.0*f);
+        return mix(mix(h(i), h(i+vec2(1,0)), f.x), mix(h(i+vec2(0,1)), h(i+vec2(1,1)), f.x), f.y); }
+      float fbm(vec2 p){ float v = 0.0, a = .5; for (int i = 0; i < 5; i++) { v += a * n(p); p *= 2.03; a *= .5; } return v; }
+      void main(){
+        vec2 p = vUv * vec2(3.0, 1.6) + vec2(uTime * .012, 0.0);
+        float c = fbm(p + fbm(p * 1.3 + uTime * .01));
+        float edge = smoothstep(0.0, .25, vUv.x) * smoothstep(1.0, .75, vUv.x) * smoothstep(0.0, .3, vUv.y) * smoothstep(1.0, .6, vUv.y);
+        gl_FragColor = vec4(vec3(1.0), smoothstep(.45, .85, c) * edge * uOp);
+      }`
+  });
+  const clouds = [[-9, .55, 1.3], [-15, .45, 7.7], [-4.5, .28, 3.1]].map(([z, op, sd]) => {
+    const m = new THREE.Mesh(new THREE.PlaneGeometry(46, 16), cloudMat(sd, op));
+    m.position.set(0, -2.5 + sd * .3, z); scene.add(m); return m;
+  });
+
+  // 3) Мягкие лучи света сверху
+  const rayMat = new THREE.ShaderMaterial({
+    transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
+    uniforms: { uTime: { value: 0 } },
+    vertexShader: `varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
+    fragmentShader: `varying vec2 vUv; uniform float uTime;
+      void main(){ float a = smoothstep(0.0, .5, vUv.x) * smoothstep(1.0, .5, vUv.x) * pow(vUv.y, 1.6);
+        a *= .5 + .5 * sin(uTime * .35 + vUv.x * 3.0); gl_FragColor = vec4(1.0, 1.0, 1.0, a * .16); }`
+  });
+  const rays = new THREE.Group(); scene.add(rays);
+  [[-3, 1.4, .18], [1.5, 2.4, -.12], [5, 1.8, .22], [8, 2.8, -.05]].forEach(([x, w, rot]) => {
+    const m = new THREE.Mesh(new THREE.PlaneGeometry(w, 18), rayMat);
+    m.position.set(x, 4, -10); m.rotation.z = rot + .35; rays.add(m);
+  });
+
   // ---------- Постобработка ----------
   const composer = new EffectComposer(renderer);
   composer.addPass(new RenderPass(scene, camera));
@@ -178,6 +233,15 @@ function init() {
     const a = L(camA) + mouse.x * .12, el = L(camE) - mouse.y * .08, r = L(camR) + (1 - e) * 4;
     camera.position.set(Math.sin(a) * Math.cos(el) * r, Math.sin(el) * r, Math.cos(a) * Math.cos(el) * r);
     camera.lookAt(crystal.position.x * .35, crystal.position.y * .5, 0);
+
+    // фон: далекие кристаллы покачиваются, облака плывут, лучи дышат
+    if (!reduce) {
+      far.forEach(o => { o.m.position.y = o.y + Math.sin(t * o.sp + o.ph) * .4; o.m.rotation.y += dt * o.sp * .3; });
+      clouds.forEach(c => { c.material.uniforms.uTime.value = t; });
+      rayMat.uniforms.uTime.value = t;
+    }
+    farGroup.rotation.y = prog * .12 + mouse.x * .06;
+    clouds.forEach((c, k) => { c.position.x = -prog * (.6 + k * .3) + mouse.x * (k + 1) * .4; });
 
     // снег медленно падает
     if (!reduce) {
