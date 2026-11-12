@@ -38,15 +38,8 @@
   root.classList.add("anim");
   splitWords();
 
-  // Плавная прокрутка
-  let lenis = null;
-  if (window.Lenis) {
-    lenis = new Lenis({ lerp: .11, smoothWheel: true, wheelMultiplier: .95 });
-    lenis.on("scroll", ScrollTrigger.update);
-    gsap.ticker.add(t => lenis.raf(t * 1000));
-    gsap.ticker.lagSmoothing(0);
-    lenis.stop();
-  }
+  // Прокрутка - родная, браузерная (без перехвата): так удобнее на мышке, тачпаде и телефоне
+  const lenis = null;
 
   // Ссылки на разделы - плавно
   document.querySelectorAll('a[href^="#"]').forEach(a => {
@@ -210,43 +203,24 @@
     const lb = { v: 0 };
     const setLb = () => stage.style.setProperty("--lb", lb.v);
     const ping = () => document.dispatchEvent(new CustomEvent("chapter", { detail: idx }));
-    // Текст полностью виден в "кадре" (там, куда доводит прокрутка), уходит только в самом конце главы
-    gsap.timeline({
-      scrollTrigger: { trigger: ch, start: "top 75%", end: "bottom bottom", scrub: .6, onEnter: ping, onEnterBack: ping }
-    })
-      .to(lb, { v: 1, duration: .22, onUpdate: setLb }, 0)
-      .fromTo(ch.querySelector(".ch-num"), { opacity: 0, x: -30 }, { opacity: 1, x: 0, duration: .12 }, .22)
-      .fromTo(ch.querySelector(".ch-line"), { scaleX: 0 }, { scaleX: 1, duration: .14 }, .24)
+    // Глава - обычный экран. Появилась - анимация проигрывается сама (не зависит от скорости прокрутки),
+    // ушла - так же плавно сворачивается.
+    const tl = gsap.timeline({ paused: true })
+      .to(lb, { v: 1, duration: .6, ease: "power2.out", onUpdate: setLb }, 0)
+      .fromTo(ch.querySelector(".ch-num"), { opacity: 0, x: -30 }, { opacity: 1, x: 0, duration: .6, ease: "power2.out" }, .15)
+      .fromTo(ch.querySelector(".ch-line"), { scaleX: 0 }, { scaleX: 1, duration: .7, ease: "power2.out" }, .2)
       .fromTo(ch.querySelector(".ch-title"),
-        { opacity: 0, y: 70, filter: "blur(16px)", letterSpacing: "0.14em" },
-        { opacity: 1, y: 0, filter: "blur(0px)", letterSpacing: "-0.02em", duration: .26, ease: "power2.out" }, .28)
-      .fromTo(ch.querySelector(".ch-sub"), { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: .14 }, .44)
-      .to([ch.querySelector(".ch-num"), ch.querySelector(".ch-title"), ch.querySelector(".ch-sub")],
-        { opacity: 0, y: -50, filter: "blur(10px)", duration: .1, stagger: .02 }, .88)
-      .to(lb, { v: 0, duration: .08, onUpdate: setLb }, .92);
+        { opacity: 0, y: 60, filter: "blur(14px)", letterSpacing: "0.14em" },
+        { opacity: 1, y: 0, filter: "blur(0px)", letterSpacing: "-0.02em", duration: 1.1, ease: "power3.out" }, .3)
+      .fromTo(ch.querySelector(".ch-sub"), { opacity: 0, y: 16 }, { opacity: 1, y: 0, duration: .7, ease: "power2.out" }, .7);
+    ScrollTrigger.create({
+      trigger: ch, start: "top 55%", end: "bottom 45%",
+      onEnter: () => { tl.timeScale(1).play(); ping(); },
+      onEnterBack: () => { tl.timeScale(1).play(); ping(); },
+      onLeave: () => tl.timeScale(2).reverse(),
+      onLeaveBack: () => tl.timeScale(2).reverse()
+    });
   });
-
-  // Мягкая доводка: остановились посреди главы - страница докатывается до красивого кадра
-  if (lenis) {
-    let idle, snapping = false;
-    const snap = () => {
-      if (snapping) return;
-      const y = scrollY, vh = innerHeight;
-      for (const ch of chapterEls) {
-        const top = ch.getBoundingClientRect().top + y;
-        const frameY = top + (ch.offsetHeight - vh) * .45;
-        const d = Math.abs(y - frameY);
-        if (d > 4 && d < vh * .25) {
-          snapping = true;
-          lenis.scrollTo(frameY, { duration: .9, easing: t => 1 - Math.pow(1 - t, 3), onComplete: () => { snapping = false; } });
-          setTimeout(() => { snapping = false; }, 1200);
-          break;
-        }
-      }
-    };
-    lenis.on("scroll", () => { clearTimeout(idle); idle = setTimeout(snap, 180); });
-  }
-
   // ===== Портфолио: анимация содержимого при раскрытии =====
   // Каждый пример - своя анимация (timeline). Навели - играет, убрали - быстро откатывается.
   function buildQA(card) {

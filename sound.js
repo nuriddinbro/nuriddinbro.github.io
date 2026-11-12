@@ -23,26 +23,7 @@
 
     master.delay = delay;
 
-    // Фон: "музыкальная шкатулка" - редкие тихие ноты в случайном порядке, без гула
-    const SCALE = [440, 523.25, 587.33, 659.25, 783.99, 880, 1046.5];
-    (function loop() {
-      if (on) {
-        const t = ctx.currentTime;
-        const n = SCALE[(Math.random() * SCALE.length) | 0];
-        softNote(n, t, .028);
-        if (Math.random() < .3) softNote(n * 1.5 > 1100 ? n / 2 : n * 1.5, t + .25, .018);
-      }
-      setTimeout(loop, 1800 + Math.random() * 2400);
-    })();
-  }
-
-  function softNote(f, t, vol) {
-    const o = ctx.createOscillator(); o.type = "sine"; o.frequency.value = f;
-    const lp = ctx.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.value = 2200;
-    const g = ctx.createGain();
-    g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(vol, t + .04); g.gain.exponentialRampToValueAtTime(.0001, t + 3.2);
-    o.connect(lp); lp.connect(g); g.connect(master); g.connect(master.delay);
-    o.start(t); o.stop(t + 3.3);
+    // Фоновой музыки нет: только "дзинь" на главах и щелчки при наведении
   }
 
   // Хрустальный "дзинь": у каждой главы своя нота (пентатоника по восходящей)

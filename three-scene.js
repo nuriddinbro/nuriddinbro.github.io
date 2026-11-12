@@ -328,12 +328,14 @@ async function start() {
   function scrollState() {
     const y = scrollY, vh = innerHeight;
     let c = null;
-    for (const ch of chapters) { const top = ch.getBoundingClientRect().top + y; if (top <= y + vh * .6) c = { el: ch, top, h: ch.offsetHeight }; }
+    for (const ch of chapters) { const top = ch.getBoundingClientRect().top + y; if (top <= y + vh * .7) c = { el: ch, top, h: ch.offsetHeight }; }
     if (!c) return { i: 0, f: 0, focus: 0, hero: y < vh * .6 };
     const s = +c.el.dataset.shape;
-    const f = clamp01((y + vh * .6 - c.top) / (vh * .9));
-    const p = (y - c.top) / Math.max(1, c.h - vh);
-    const focus = sstep(-.35, .05, p) * (1 - sstep(.72, 1.02, p));
+    // перетекает, пока глава въезжает на экран
+    const f = clamp01((y + vh * .7 - c.top) / (vh * .7));
+    // крупный план, когда центр главы близко к центру экрана
+    const d = Math.abs((c.top + c.h / 2) - (y + vh / 2)) / vh;
+    const focus = 1 - sstep(.18, .65, d);
     return { i: s - 1, f, focus, hero: false };
   }
 
