@@ -629,12 +629,7 @@ section[id] { scroll-margin-top: 70px; }
   position: relative; height: 100%; overflow: hidden; pointer-events: none;
   display: flex; flex-direction: column; justify-content: flex-end; padding: 0 6vw 13vh; --lb: 0;
 }
-.chapter-stage::before, .chapter-stage::after { /* кинополосы сверху и снизу */
-  content: ""; position: absolute; left: 0; right: 0; height: calc(9vh * var(--lb)); background: #05070a; z-index: 1;
-  box-shadow: 0 0 40px rgba(0,0,0,.6);
-}
-.chapter-stage::before { top: 0; }
-.chapter-stage::after { bottom: 0; }
+/* кинополосы убраны */
 .ch-num { position: relative; z-index: 2; display: flex; align-items: center; gap: 14px; margin: 0 0 14px; font: 600 13px var(--mono); letter-spacing: .2em; color: var(--accent); }
 .ch-line { display: inline-block; width: 90px; height: 1px; background: var(--accent); box-shadow: 0 0 10px var(--accent); transform-origin: left; }
 .ch-title { position: relative; z-index: 2; font: 800 italic clamp(56px, 11vw, 170px)/.9 var(--display); letter-spacing: -.02em; margin: 0; text-shadow: 0 10px 60px rgba(0,0,0,.6); }
