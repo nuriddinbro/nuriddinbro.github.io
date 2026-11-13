@@ -42,7 +42,6 @@ function init() {
 
   const rnd = (a, b) => a + Math.random() * (b - a);
   const N = isMobile ? 5200 : 14000;
-  let curI = -1;
 
   // ---------- Формы из песка: у каждой песчинки своя точка в каждой форме ----------
   // шапка - шар, опыт - силуэт, портфолио - щит с галочкой, навыки - гарнитура, языки - Сатурн, контакты - конверт
@@ -113,7 +112,7 @@ function init() {
         const bulge = Math.sqrt(Math.max(0, 1 - (px / 1.25) ** 2)) * .42;
         return [px, py, rnd(-bulge, bulge)];
       });
-      curI = -1; // перезаписать текущие формы
+      aF[1].array.set(forms[1]); aF[1].needsUpdate = true; // силуэт загружен - один раз обновляем
     } catch (e) {}
   })();
 
@@ -121,11 +120,11 @@ function init() {
   const grainGeo = new THREE.IcosahedronGeometry(.038, 0);
   const geo = new THREE.InstancedBufferGeometry().copy(grainGeo);
   geo.instanceCount = N;
-  const aA = new THREE.InstancedBufferAttribute(forms[0].slice(), 3);
-  const aB = new THREE.InstancedBufferAttribute(forms[1].slice(), 3);
+  // все 6 фигур загружаются в видеокарту один раз - дальше только смешиваются (без лагов)
+  const aF = forms.map(fm => new THREE.InstancedBufferAttribute(fm.slice(), 3));
   const seed = new Float32Array(N), dir = new Float32Array(N * 3), tint = new Float32Array(N);
   for (let i = 0; i < N; i++) { seed[i] = Math.random(); const u = rnd(-1, 1), a = rnd(0, 6.283), s = Math.sqrt(1 - u * u); dir.set([s * Math.cos(a), u, s * Math.sin(a)], i * 3); tint[i] = Math.random(); }
-  geo.setAttribute("aA", aA); geo.setAttribute("aB", aB);
+  aF.forEach((at, k) => geo.setAttribute("aF" + k, at));
   geo.setAttribute("aSeed", new THREE.InstancedBufferAttribute(seed, 1));
   geo.setAttribute("aDir", new THREE.InstancedBufferAttribute(dir, 3));
   geo.setAttribute("aTint", new THREE.InstancedBufferAttribute(tint, 1));
@@ -133,18 +132,23 @@ function init() {
   const U = {
     uTime: { value: 0 }, uMix: { value: 0 }, uIntro: { value: reduce ? 1 : 0 },
     uWind: { value: 0 }, uWindDir: { value: new THREE.Vector3(0, 1, 0) },
-    uEx: { value: 0 }, uMouse: { value: new THREE.Vector3(99, 99, 99) }, uHover: { value: 0 }
+    uEx: { value: 0 }, uMouse: { value: new THREE.Vector3(99, 99, 99) }, uHover: { value: 0 },
+    uW: { value: [1, 0, 0, 0, 0, 0] },
+    uTrail: { value: Array.from({ length: 8 }, () => new THREE.Vector4(99, 99, 99, 0)) }
   };
   const mat = new THREE.MeshStandardMaterial({ color: "#a9bccb", roughness: .78, metalness: 0, envMapIntensity: .45 });
   mat.onBeforeCompile = sh => {
     Object.assign(sh.uniforms, U);
     sh.vertexShader = `
-      attribute vec3 aA; attribute vec3 aB; attribute float aSeed; attribute vec3 aDir; attribute float aTint;
+      attribute vec3 aF0; attribute vec3 aF1; attribute vec3 aF2; attribute vec3 aF3; attribute vec3 aF4; attribute vec3 aF5;
+      attribute float aSeed; attribute vec3 aDir; attribute float aTint;
+      uniform float uW[6]; uniform vec4 uTrail[8];
       uniform float uTime, uMix, uIntro, uWind, uEx, uHover; uniform vec3 uWindDir, uMouse;
       varying float vShade; varying float vTint;
     ` + sh.vertexShader.replace("#include <begin_vertex>", `
       float m = uMix;
-      vec3 p = mix(aA, aB, m);
+      vec3 shape = aF0 * uW[0] + aF1 * uW[1] + aF2 * uW[2] + aF3 * uW[3] + aF4 * uW[4] + aF5 * uW[5];
+      vec3 p = shape;
       float bump = 4.0 * m * (1.0 - m);
       vec3 n3 = vec3(sin(uTime * .7 + aSeed * 31.0), cos(uTime * .6 + aSeed * 17.0), sin(uTime * .5 + aSeed * 11.0));
       p += n3 * (0.002 + bump * (0.35 + aSeed * .9)) + normalize(p + vec3(.0001)) * bump * (.35 + aSeed * .6);
@@ -155,10 +159,17 @@ function init() {
       p += normalize(p + vec3(.0001)) * uEx * (.4 + aSeed * .9) + n3 * uEx * .3;
       // курсор: песчинки расступаются
       vec3 dm = p - uMouse; float dd = length(dm);
-      p += normalize(dm + vec3(.0001)) * smoothstep(.8, .0, dd) * .38 * uHover;
+      p += normalize(dm + vec3(.0001)) * smoothstep(.6, .0, dd) * .22 * uHover;
+      // след курсора: песчинки вдоль пути разлетаются и плавно оседают
+      for (int k = 0; k < 8; k++) {
+        vec4 tp = uTrail[k];
+        vec3 dv = p - tp.xyz; float dk = length(dv);
+        float kk = tp.w * smoothstep(.6, .0, dk);
+        p += normalize(dv + vec3(.0001)) * kk * .55 + n3 * kk * .4;
+      }
       // появление: песок слетается из облака
       p = mix(aDir * (4.0 + aSeed * 5.0), p, uIntro);
-      vShade = clamp(length(mix(aA, aB, m)) / 1.6, .0, 1.0);
+      vShade = clamp(length(shape) / 1.6, .0, 1.0);
       vTint = aTint;
       vec3 transformed = position * (0.7 + aSeed * .7) + p;
     `);
@@ -183,7 +194,7 @@ function init() {
   });
 
   // Где кристалл на экране (напротив панели) и как стоит камера
-  const side = [1, -1, 1, -1, 1, -1];
+  const side = [1.35, -1, 1, -1, 1, -1];
   const camA = [0, .38, -.32, .28, -.36, .1];
   const camE = [.06, .2, -.06, .36, .1, .04];
   const camR = [8.2, 7.6, 7.8, 8.2, 7.4, 8];
@@ -296,7 +307,7 @@ function init() {
 
   // ---------- Цикл ----------
   const clock = new THREE.Clock();
-  let prog = progress(), intro = 0, wind = 0, lastProg = prog;
+  let prog = progress(), intro = 0, wind = 0, lastProg = prog, trI = 0;
   const sm = x => x * x * (3 - 2 * x);
   const invQ = new THREE.Quaternion(), wdir = new THREE.Vector3();
   const dbg = new URLSearchParams(location.search);
@@ -310,7 +321,8 @@ function init() {
 
     // какая пара форм и насколько перетекла
     const i = Math.min(Math.floor(prog), forms.length - 2), f = sm(Math.min(1, prog - i));
-    if (i !== curI) { curI = i; aA.array.set(forms[i]); aA.needsUpdate = true; aB.array.set(forms[i + 1]); aB.needsUpdate = true; }
+    for (let k = 0; k < 6; k++) U.uW.value[k] = 0;
+    U.uW.value[i] += 1 - f; U.uW.value[i + 1] += f;
     U.uMix.value = f;
     U.uTime.value = reduce ? 0 : t;
     U.uIntro.value = 1 - Math.pow(1 - intro, 3);
@@ -333,9 +345,17 @@ function init() {
     if (h !== hover) { hover = h; document.dispatchEvent(new CustomEvent("crystalhover", { detail: h })); }
     hoverAmt += ((hover ? 1 : 0) - hoverAmt) * .1;
     U.uHover.value = hoverAmt;
+    // след курсора по шару: новые точки, старые плавно "гаснут"
+    const tr = U.uTrail.value;
+    for (const q of tr) q.w = Math.max(0, q.w - dt * .85);
     crystal.getWorldPosition(wp);
     plane.setFromNormalAndCoplanarPoint(camera.getWorldDirection(hitP).negate(), wp);
-    if (ray.ray.intersectPlane(plane, hitP)) U.uMouse.value.copy(crystal.worldToLocal(hitP.clone()));
+    if (ray.ray.intersectPlane(plane, hitP)) {
+      const loc = crystal.worldToLocal(hitP.clone());
+      U.uMouse.value.copy(loc);
+      const lastT = tr[trI];
+      if (hover && Math.hypot(loc.x - lastT.x, loc.y - lastT.y, loc.z - lastT.z) > .12) { trI = (trI + 1) % 8; tr[trI].set(loc.x, loc.y, loc.z, 1); }
+    }
 
     // положение и вращение
     const e = U.uIntro.value;

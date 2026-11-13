@@ -65,7 +65,11 @@ main { position: relative; z-index: 1; }
 .eyebrow { display: inline-flex; align-items: center; gap: 10px; font: 500 11px var(--mono); letter-spacing: .16em; text-transform: uppercase; color: var(--ink-2); margin-bottom: 28px; }
 .live { width: 7px; height: 7px; border-radius: 50%; background: var(--ok); box-shadow: 0 0 0 0 rgba(31,157,99,.5); animation: live 2.4s infinite; }
 @keyframes live { 70%, 100% { box-shadow: 0 0 0 9px rgba(31,157,99,0); } }
-.title { font: 300 clamp(40px, 6vw, 92px)/1.02 var(--font); letter-spacing: -.035em; margin: 0; }
+.title { font: 300 clamp(58px, 8.6vw, 138px)/.95 var(--font); letter-spacing: -.045em; margin: 0; }
+/* композиция: маленькая тонкая строка сверху + крупное жирное "портфолио" */
+.title .t-small { display: block; font-size: .36em; font-weight: 300; letter-spacing: -.015em; color: var(--ink-2); margin: 0 0 .22em .04em; }
+.title .t-big { display: block; white-space: nowrap; }
+.title .t-dot { color: var(--accent); font-weight: 700; }
 .title .w { display: inline-block; white-space: nowrap; }
 .title .c { display: inline-block; opacity: 0; filter: blur(14px); transform: translateY(.6em) rotate(6deg) scale(1.15); }
 /* 1) буквы "намерзают" по одной; 2) потом раз в ~8 секунд по ним пробегает мягкая ледяная волна */
@@ -74,13 +78,13 @@ main { position: relative; z-index: 1; }
   animation-delay: calc(var(--i) * 55ms + .3s), calc(var(--i) * 70ms + 3.5s);
 }
 @keyframes wave {
-  0%, 7%, 100% { transform: none; color: inherit; text-shadow: none; }
-  3.5% { transform: translateY(-.09em); color: #1c86b5; text-shadow: 0 0 22px rgba(28,134,181,.35); }
+  0%, 7%, 100% { transform: none; }
+  3.5% { transform: translateY(-.12em); }
 }
 @keyframes frost { 60% { filter: blur(1px); } to { opacity: 1; filter: blur(0); transform: none; } }
 /* "портфолио": появляется последним, потом по нему периодически пробегает ледяной блик */
 .title em {
-  font-style: normal; font-weight: 600; display: inline-block; opacity: 0; filter: blur(12px);
+  font-style: normal; font-weight: 700; letter-spacing: -.055em; display: inline-block; opacity: 0; filter: blur(12px);
   background: linear-gradient(110deg, #14202b 0%, #1c86b5 30%, #d9f4ff 48%, #1c86b5 62%, #3b6f96 100%) 0 0 / 260% 100%;
   -webkit-background-clip: text; background-clip: text; color: transparent;
 }
@@ -204,6 +208,8 @@ main { position: relative; z-index: 1; }
 @media (max-width: 860px) {
   .nav { display: none; }
   .lang { margin-left: auto; }
+  .title { font-size: 14.5vw; }
+  .title .t-small { font-size: .42em; }
   .hud { padding: 0 16px; }
   .hud-top { height: 62px; }
   .scene, .scene.right { justify-content: center; padding: 48px 14px; min-height: 0; }

@@ -28,40 +28,56 @@
     d1.connect(lp); lp.connect(fb); fb.connect(d1); lp.connect(master);
     wet = d1;
 
-    // Фоновая мелодия: тихий "пианино"-перебор по аккордам Am - F - C - G
+    // Фоновая музыка: "эмбиент-пианино" в просторном зале (свое синтезированное эхо, без файлов)
     music = ctx.createGain(); music.gain.value = 0;
-    const tone = ctx.createBiquadFilter(); tone.type = "lowpass"; tone.frequency.value = 1900;
-    music.connect(tone); tone.connect(master); tone.connect(wet);
+    const hall = ctx.createConvolver();
+    const irLen = ctx.sampleRate * 3.2, ir = ctx.createBuffer(2, irLen, ctx.sampleRate);
+    for (let c = 0; c < 2; c++) { const d = ir.getChannelData(c); for (let i = 0; i < irLen; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / irLen, 3.2); }
+    hall.buffer = ir;
+    const hallGain = ctx.createGain(); hallGain.gain.value = .55;
+    const warm = ctx.createBiquadFilter(); warm.type = "lowpass"; warm.frequency.value = 2600;
+    music.connect(warm); warm.connect(master); warm.connect(hall); hall.connect(hallGain); hallGain.connect(master);
     scheduler();
   }
 
-  // Ноты в формате MIDI: 57 = A3, 60 = C4 ...
+  // Ноты в формате MIDI (60 = до первой октавы)
   const midi = n => 440 * Math.pow(2, (n - 69) / 12);
-  const CHORDS = [[57, 60, 64, 69], [53, 57, 60, 65], [48, 52, 55, 60], [55, 59, 62, 67]];
-  const PATTERN = [0, 2, 3, 2, 1, 2, 3, 2];   // перебор: 8 нот на такт
-  const STEP = 60 / 66 / 2;                   // темп 66 ударов в минуту, восьмые
-  let nextT = 0, step = 0;
+  // Аккорды: Am9 - Fmaj7 - Cmaj7 - G6 (спокойно и немного мечтательно)
+  const CHORDS = [[45, 57, 60, 64, 71], [41, 57, 60, 64, 65], [36, 55, 59, 64, 67], [43, 55, 59, 62, 64]];
+  // Мелодия на 8 тактов (по 4 доли, 0 - пауза)
+  const MELODY = [
+    [76, 0, 72, 74], [76, 0, 69, 0], [67, 69, 72, 0], [74, 0, 71, 0],
+    [72, 74, 76, 79], [77, 0, 76, 72], [74, 0, 72, 67], [69, 0, 0, 0]
+  ];
+  const BEAT = 60 / 68;                       // темп 68 ударов в минуту
+  let nextT = 0, beat = 0;
 
-  function pianoNote(f, t, vol, len) {
-    const o1 = ctx.createOscillator(); o1.type = "sine"; o1.frequency.value = f;
-    const o2 = ctx.createOscillator(); o2.type = "triangle"; o2.frequency.value = f * 2; o2.detune.value = 3;
-    const g2 = ctx.createGain(); g2.gain.value = .25;
-    const g = ctx.createGain();
-    g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(vol, t + .012); g.gain.exponentialRampToValueAtTime(.0001, t + len);
-    o1.connect(g); o2.connect(g2); g2.connect(g); g.connect(music);
-    o1.start(t); o2.start(t); o1.stop(t + len + .05); o2.stop(t + len + .05);
+  // "Пианино": несколько обертонов, верхние гаснут быстрее - звук теплый и мягкий
+  function piano(n, t, vol, len) {
+    const f = midi(n), out = ctx.createGain();
+    out.gain.setValueAtTime(0, t); out.gain.linearRampToValueAtTime(vol, t + .008); out.gain.exponentialRampToValueAtTime(.0001, t + len);
+    out.connect(music);
+    [[1, 1, 1], [2, .32, .55], [3, .12, .35], [4, .05, .22]].forEach(([h, a, l]) => {
+      const o = ctx.createOscillator(); o.type = "sine"; o.frequency.value = f * h; o.detune.value = (Math.random() - .5) * 4;
+      const g = ctx.createGain(); g.gain.setValueAtTime(a, t); g.gain.exponentialRampToValueAtTime(.0001, t + len * l);
+      o.connect(g); g.connect(out); o.start(t); o.stop(t + len + .05);
+    });
   }
 
   function scheduler() {
     setInterval(() => {
       if (!on || !ctx || ctx.state !== "running") { nextT = 0; return; }
-      if (!nextT) nextT = ctx.currentTime + .1;
-      while (nextT < ctx.currentTime + .35) {
-        const bar = Math.floor(step / 8) % CHORDS.length, chord = CHORDS[bar], k = step % 8;
-        pianoNote(midi(chord[PATTERN[k]] + 12), nextT, k === 0 ? .05 : .035, 1.8);
-        if (k === 0) pianoNote(midi(chord[0] - 12), nextT, .06, 3.2);            // мягкий бас в начале такта
-        if (k === 4 && Math.random() < .5) pianoNote(midi(chord[3] + 12), nextT + STEP * .5, .025, 2); // редкое "украшение"
-        nextT += STEP; step++;
+      if (!nextT) nextT = ctx.currentTime + .15;
+      while (nextT < ctx.currentTime + .4) {
+        const bar = Math.floor(beat / 4), b = beat % 4;
+        const chord = CHORDS[bar % 4], mel = MELODY[bar % 8][b];
+        if (b === 0) {                                   // начало такта: бас + мягкий аккорд "волной"
+          piano(chord[0], nextT, .05, 4.5);
+          chord.slice(1).forEach((n, k) => piano(n, nextT + .06 + k * .05, .018, 3.5));
+        }
+        if (b === 2) chord.slice(2, 4).forEach((n, k) => piano(n + 12, nextT + k * .04, .01, 2)); // тихие отголоски
+        if (mel) piano(mel, nextT + (Math.random() - .5) * .02, .034, 2.8);                   // мелодия
+        nextT += BEAT; beat++;
       }
     }, 90);
   }
