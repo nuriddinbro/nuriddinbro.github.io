@@ -55,7 +55,7 @@ main { position: relative; z-index: 1; }
 @keyframes tip { 50% { transform: translateY(4px); } }
 
 /* ===== Экраны ===== */
-.scene { min-height: 72vh; display: flex; align-items: center; padding: 70px 6vw; }
+.scene { display: flex; align-items: center; padding: 15vh 6vw; } /* одинаковые ровные промежутки между всеми разделами */
 #s0 { min-height: 100vh; min-height: 100svh; padding-top: 110px; }
 #s5 { min-height: 90vh; }
 .scene.right { justify-content: flex-end; }
@@ -214,7 +214,7 @@ main { position: relative; z-index: 1; }
   .title .t-small { font-size: .42em; }
   .hud { padding: 0 16px; }
   .hud-top { height: 62px; }
-  .scene, .scene.right { justify-content: center; padding: 48px 14px; min-height: 0; }
+  .scene, .scene.right { justify-content: center; padding: 11vh 14px; min-height: 0; }
   #s0 { padding-top: 90px; }
   .panel { padding: 26px 20px; background: rgba(255,255,255,.62); }
   .job { grid-template-columns: 1fr; }

@@ -315,7 +315,7 @@ function init() {
 
   // ---------- Цикл ----------
   const clock = new THREE.Clock();
-  let prog = progress(), intro = 0, wind = 0, lastProg = prog, trI = 0, lowered = false, frames = 0, ftime = 0;
+  let prog = progress(), intro = 0, wind = 0, lastProg = prog, trI = 0, lowered = false, frames = 0, ftime = 0, progV = 0, rotY = 0;
   const trAge = new Array(8).fill(99);
   const sm = x => x * x * x * (x * (x * 6 - 15) + 10); // очень плавная кривая (без рывков в начале и в конце)
   const invQ = new THREE.Quaternion(), wdir = new THREE.Vector3();
@@ -325,7 +325,7 @@ function init() {
     const dt = Math.min(clock.getDelta(), .05), t = clock.elapsedTime;
     const dbgAt = dbg.has("at");
     intro = dbgAt ? 1 : Math.min(1, intro + dt * .4);
-    prog = dbgAt ? +dbg.get("at") : prog + (progress() - prog) * Math.min(1, dt * 2.2);
+    if (dbgAt) prog = +dbg.get("at"); else { const tg = progress(); progV += ((tg - prog) * 10 - progV * 6.3) * dt; prog += progV * dt; if (Math.abs(tg - prog) < .0005 && Math.abs(progV) < .001) { prog = tg; progV = 0; } }
     mouse.x += (mouse.tx - mouse.x) * .05; mouse.y += (mouse.ty - mouse.y) * .05;
 
     // какая пара форм и насколько перетекла
@@ -372,7 +372,9 @@ function init() {
     crystal.scale.setScalar(.75 + .25 * e);
     // фигура смотрит на зрителя (на камеру) и лишь мягко покачивается; при перетекании делает пол-оборота
     const camAz = camA[i] + (camA[i + 1] - camA[i]) * f;
-    crystal.rotation.y = camAz + (reduce ? 0 : Math.sin(t * .25) * .32) + Math.sin(f * Math.PI) * 1.2 + mouse.x * .35;
+    const rotTarget = camAz + (reduce ? 0 : Math.sin(t * .25) * .32) + Math.sin(f * Math.PI) * .7 + mouse.x * .35;
+    rotY += (rotTarget - rotY) * Math.min(1, dt * 2.4);
+    crystal.rotation.y = rotY;
     crystal.rotation.x = mouse.y * .18;
     const wide = camera.aspect > 1.1;
     crystal.position.x = wide ? sideNow * Math.min(2.4, camera.aspect * 1.25) : 0;
@@ -400,6 +402,6 @@ function init() {
     renderer.render(scene, camera);
 
     // автоподстройка: если кадры долгие - меньше песчинок и четкость
-    if (t > 2.5 && !lowered) { frames++; ftime += dt; if (frames >= 90) { if (ftime / frames > .022) { lowered = true; renderer.setPixelRatio(1); geo.instanceCount = Math.floor(N * .6); } frames = 0; ftime = 0; } }
+    if (t > 2.5 && !lowered) { frames++; ftime += dt; if (frames >= 90) { if (ftime / frames > .022) { lowered = true; renderer.setPixelRatio(1); } frames = 0; ftime = 0; } }
   });
 }
