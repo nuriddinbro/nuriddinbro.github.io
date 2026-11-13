@@ -51,6 +51,8 @@
     num.textContent = String(i + 1).padStart(2, "0");
     const max = document.documentElement.scrollHeight - innerHeight;
     rail.style.width = (max > 0 ? scrollY / max * 100 : 0) + "%";
+    // в самом верху прячем "Наверх", в самом низу - "Вниз"
+    document.querySelectorAll("[data-jump]").forEach(b => b.classList.toggle("off", b.dataset.jump === "top" ? scrollY < 60 : scrollY > max - 60));
     links.forEach(a => a.classList.toggle("on", a.getAttribute("href") === "#" + scenes[i].id));
   }
   addEventListener("scroll", upd, { passive: true });

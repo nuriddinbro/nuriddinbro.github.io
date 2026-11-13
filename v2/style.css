@@ -252,6 +252,8 @@ html.cur-on, html.cur-on a, html.cur-on button { cursor: none; }
 .jump { margin-left: auto; display: flex; gap: 6px; pointer-events: auto; }
 .jump-btn { border: 1px solid var(--line); background: rgba(255,255,255,.45); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); padding: 8px 12px; cursor: pointer; font: 600 10px var(--mono); letter-spacing: .14em; text-transform: uppercase; color: var(--ink); transition: background .25s, color .25s; }
 .jump-btn:hover { background: var(--ink); color: #fff; }
+.jump-btn { transition: background .25s, color .25s, opacity .35s, transform .35s; }
+.jump-btn.off { opacity: 0; transform: translateY(6px); pointer-events: none; }
 
 /* Кнопка звука */
 .snd { display: inline-flex; align-items: center; gap: 8px; border: 1px solid var(--line); background: transparent; cursor: pointer; padding: 7px 10px; font: 600 10px var(--mono); letter-spacing: .12em; color: var(--muted); }

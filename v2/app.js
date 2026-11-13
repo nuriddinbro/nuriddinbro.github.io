@@ -167,7 +167,7 @@ function init() {
         float env = rise * (1.0 - smoothstep(.6, 2.9, age));
         vec3 dv = p - tp.xyz; dv -= dot(dv, uView) * uView; float dk = length(dv);
         float kk = env * pow(smoothstep(.95, .0, dk), 2.5);
-        p += normalize(dv + vec3(.0001)) * kk * .17 - uView * kk * .12;
+        p += normalize(dv + vec3(.0001)) * kk * .23 - uView * kk * .16;
       }
       // появление: песок слетается из облака
       p = mix(aDir * (4.0 + aSeed * 5.0), p, uIntro);
