@@ -220,7 +220,10 @@ html.cur-on, html.cur-on a, html.cur-on button { cursor: none; }
 .frost { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 40; pointer-events: none; }
 .cur { position: fixed; inset: 0; z-index: 60; pointer-events: none; }
 .cur-dot, .cur-ring { position: fixed; top: 0; left: 0; display: block; border-radius: 50%; }
-.cur-dot { width: 6px; height: 6px; margin: -3px 0 0 -3px; background: var(--ink); }
+.cur-dot { width: 8px; height: 8px; margin: -4px 0 0 -4px; background: var(--ink); transition: width .25s, height .25s, margin .25s, background .25s, box-shadow .25s; }
+.cur.hover .cur-dot { width: 16px; height: 16px; margin: -8px 0 0 -8px; background: var(--accent); }
+.cur.crystal .cur-dot { width: 14px; height: 14px; margin: -7px 0 0 -7px; background: #fff; box-shadow: 0 0 0 1px var(--ink), 0 0 18px rgba(28,134,181,.5); }
+.cur.down .cur-dot { transform-origin: center; }
 .cur-ring { width: 34px; height: 34px; margin: -17px 0 0 -17px; border: 1px solid rgba(20,32,43,.55); transition: width .3s, height .3s, margin .3s, background .3s, border-color .3s; display: grid; place-items: center; }
 .cur-ring span { font: 600 8px var(--mono); letter-spacing: .14em; color: var(--ink); opacity: 0; transition: opacity .2s; }
 .cur.hover .cur-ring { width: 54px; height: 54px; margin: -27px 0 0 -27px; background: rgba(255,255,255,.35); }

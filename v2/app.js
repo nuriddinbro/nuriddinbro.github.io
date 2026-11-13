@@ -1,12 +1,11 @@
 // Версия 2: светлая морозная 3D-сцена.
-// В центре - стеклянный кристалл из 80 осколков с преломлением света. Вокруг - туман и снег.
-// Прокрутка (родная, без перехвата) ведет камеру, а осколки перестраиваются для каждого раздела:
-// кристалл -> кольцо -> спираль -> решетка -> сфера -> снова кристалл.
+// В центре - кристалл из тысяч матовых песчинок (как песчаная скульптура), вокруг - тонкие кольца, туман и снег.
+// Прокрутка (родная, без перехвата): песок срывается шлейфом, как на ветру, и собирается в форму раздела:
+// кристалл -> кольцо -> двойная спираль -> куб -> планета с кольцом -> снова кристалл.
 import * as THREE from "three";
 import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
 import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
 import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
-import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js";
 import { OutputPass } from "three/addons/postprocessing/OutputPass.js";
 
 const isMobile = matchMedia("(max-width: 860px)").matches || matchMedia("(pointer: coarse)").matches;
@@ -24,55 +23,125 @@ function init() {
   renderer.setPixelRatio(dpr);
   renderer.setSize(innerWidth, innerHeight);
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 1.05;
+  renderer.toneMappingExposure = 1.0;
   renderer.domElement.id = "scene";
   document.body.prepend(renderer.domElement);
 
   const scene = new THREE.Scene();
   scene.background = FOG.clone();
-  scene.fog = new THREE.FogExp2(FOG, .055);
+  scene.fog = new THREE.FogExp2(FOG, .05);
   const pmrem = new THREE.PMREMGenerator(renderer);
   scene.environment = pmrem.fromScene(new RoomEnvironment(renderer), .04).texture;
 
   const camera = new THREE.PerspectiveCamera(34, innerWidth / innerHeight, .1, 100);
 
-  // Свет: мягкий ключевой сверху-справа и холодный контровой
-  const key = new THREE.DirectionalLight("#ffffff", 2.2); key.position.set(4, 6, 5); scene.add(key);
-  const rim = new THREE.DirectionalLight("#9fd6ee", 1.6); rim.position.set(-6, -2, -4); scene.add(rim);
+  // Свет: мягкий рассеянный + ключевой сверху-справа (дает объем песчинкам)
+  scene.add(new THREE.HemisphereLight("#ffffff", "#9fb0bf", 1.1));
+  const key = new THREE.DirectionalLight("#ffffff", 2.4); key.position.set(4, 6, 5); scene.add(key);
+  const rim = new THREE.DirectionalLight("#b8e2f2", 1.0); rim.position.set(-6, -2, -4); scene.add(rim);
 
-  // ---------- Кристалл из осколков ----------
-  const crystal = new THREE.Group();
-  scene.add(crystal);
-  const base = new THREE.IcosahedronGeometry(1.45, 1).toNonIndexed();
-  const P = base.attributes.position;
-  const glass = new THREE.MeshPhysicalMaterial({
-    color: "#ffffff", metalness: 0, roughness: .2, transmission: 1, thickness: .6, ior: 1.45,
-    clearcoat: 1, clearcoatRoughness: .1,
-    attenuationColor: new THREE.Color("#a9dcef"), attenuationDistance: 1.6,
-    envMapIntensity: 1.5, flatShading: true, specularIntensity: 1
-  });
-  const edgeMat = new THREE.LineBasicMaterial({ color: "#ffffff", transparent: true, opacity: .55 });
-  const shards = [];
-  const v = [new THREE.Vector3(), new THREE.Vector3(), new THREE.Vector3()];
-  for (let f = 0; f < P.count; f += 3) {
-    for (let k = 0; k < 3; k++) v[k].fromBufferAttribute(P, f + k);
-    const c = new THREE.Vector3().add(v[0]).add(v[1]).add(v[2]).divideScalar(3);
-    const inner = c.clone().multiplyScalar(.55); // внутренняя вершина - осколок становится "пирамидкой"
-    const pts = [v[0], v[1], v[2], inner].map(p => p.clone().sub(c));
-    const g = new THREE.BufferGeometry().setFromPoints([
-      pts[0], pts[1], pts[2], pts[0], pts[3], pts[1], pts[1], pts[3], pts[2], pts[2], pts[3], pts[0]
-    ]);
-    g.computeVertexNormals();
-    const m = new THREE.Mesh(g, glass);
-    m.add(new THREE.LineSegments(new THREE.EdgesGeometry(g), edgeMat));
-    m.position.copy(c);
-    crystal.add(m);
-    shards.push({ m, home: c, rnd: Math.random() });
+  const rnd = (a, b) => a + Math.random() * (b - a);
+  const N = isMobile ? 5200 : 14000;
+
+  // ---------- Формы из песка: у каждой песчинки своя точка в каждой форме ----------
+  function make(gen) { const a = new Float32Array(N * 3); for (let i = 0; i < N; i++) a.set(gen(i), i * 3); return a; }
+  // кристалл: поверхность икосаэдра со "слоем" песка внутрь
+  const ico = new THREE.IcosahedronGeometry(1.55, 0).toNonIndexed().attributes.position;
+  const faces = ico.count / 3;
+  const va = new THREE.Vector3(), vb = new THREE.Vector3(), vc = new THREE.Vector3(), tmp = new THREE.Vector3();
+  function crystalPt() {
+    const f = (Math.random() * faces | 0) * 3;
+    va.fromBufferAttribute(ico, f); vb.fromBufferAttribute(ico, f + 1); vc.fromBufferAttribute(ico, f + 2);
+    let u = Math.random(), v = Math.random(); if (u + v > 1) { u = 1 - u; v = 1 - v; }
+    tmp.copy(va).addScaledVector(vb.sub(va), u).addScaledVector(vc.sub(va), v);
+    const depth = Math.pow(Math.random(), 2.2) * .35; // большинство песчинок у поверхности
+    tmp.multiplyScalar(1 - depth / 1.55);
+    return [tmp.x, tmp.y * 1.15, tmp.z];
   }
-  const N = shards.length;
+  const shell = (x, y, z, k) => { const d = Math.pow(Math.random(), 2.2) * k; const l = Math.hypot(x, y, z) || 1; return [x * (1 - d / l), y * (1 - d / l), z * (1 - d / l)]; };
+  const forms = [
+    make(crystalPt),
+    make(() => { const a = rnd(0, 6.283), b = rnd(0, 6.283), r = .38 * Math.sqrt(Math.random() * .4 + .6); return [(1.75 + r * Math.cos(b)) * Math.cos(a), r * Math.sin(b), (1.75 + r * Math.cos(b)) * Math.sin(a)]; }),                         // кольцо (тор)
+    make(i => { const s = i % 2 ? Math.PI : 0, y = rnd(-1.9, 1.9), a = y * 2.2 + s, b = rnd(0, 6.283), r = .26 * Math.sqrt(Math.random()); return [Math.cos(a) * .95 + Math.cos(b) * r, y, Math.sin(a) * .95 + Math.sin(b) * r]; }),           // двойная спираль
+    make(() => { const ax = Math.random() * 3 | 0, sg = Math.random() < .5 ? -1 : 1, p = [rnd(-1.15, 1.15), rnd(-1.15, 1.15), rnd(-1.15, 1.15)]; p[ax] = 1.15 * sg; return shell(p[0], p[1], p[2], .3); }),                          // куб
+    make(i => { if (i % 3 === 0) { const a = rnd(0, 6.283), r = Math.sqrt(rnd(2.05 * 2.05, 2.7 * 2.7)); return [Math.cos(a) * r, rnd(-.03, .03), Math.sin(a) * r * .98]; }
+      const u = rnd(-1, 1), a = rnd(0, 6.283), s = Math.sqrt(1 - u * u); return shell(1.4 * s * Math.cos(a), 1.4 * u, 1.4 * s * Math.sin(a), .3); }),                                                                              // планета с кольцом
+    null
+  ];
+  forms[5] = forms[0];
 
-  // Свет и частицы внутри кристалла
-  const glow = new THREE.PointLight("#5cc8f0", 6, 6, 1.6); crystal.add(glow);
+  // ---------- Песчинки: InstancedMesh + шейдер, который двигает их на видеокарте ----------
+  const grainGeo = new THREE.IcosahedronGeometry(.032, 0);
+  const geo = new THREE.InstancedBufferGeometry().copy(grainGeo);
+  geo.instanceCount = N;
+  const aA = new THREE.InstancedBufferAttribute(forms[0].slice(), 3);
+  const aB = new THREE.InstancedBufferAttribute(forms[1].slice(), 3);
+  const seed = new Float32Array(N), dir = new Float32Array(N * 3), tint = new Float32Array(N);
+  for (let i = 0; i < N; i++) { seed[i] = Math.random(); const u = rnd(-1, 1), a = rnd(0, 6.283), s = Math.sqrt(1 - u * u); dir.set([s * Math.cos(a), u, s * Math.sin(a)], i * 3); tint[i] = Math.random(); }
+  geo.setAttribute("aA", aA); geo.setAttribute("aB", aB);
+  geo.setAttribute("aSeed", new THREE.InstancedBufferAttribute(seed, 1));
+  geo.setAttribute("aDir", new THREE.InstancedBufferAttribute(dir, 3));
+  geo.setAttribute("aTint", new THREE.InstancedBufferAttribute(tint, 1));
+
+  const U = {
+    uTime: { value: 0 }, uMix: { value: 0 }, uIntro: { value: reduce ? 1 : 0 },
+    uWind: { value: 0 }, uWindDir: { value: new THREE.Vector3(0, 1, 0) },
+    uEx: { value: 0 }, uMouse: { value: new THREE.Vector3(99, 99, 99) }, uHover: { value: 0 }
+  };
+  const mat = new THREE.MeshStandardMaterial({ color: "#f2f6f8", roughness: .82, metalness: 0, envMapIntensity: .6 });
+  mat.onBeforeCompile = sh => {
+    Object.assign(sh.uniforms, U);
+    sh.vertexShader = `
+      attribute vec3 aA; attribute vec3 aB; attribute float aSeed; attribute vec3 aDir; attribute float aTint;
+      uniform float uTime, uMix, uIntro, uWind, uEx, uHover; uniform vec3 uWindDir, uMouse;
+      varying float vShade; varying float vTint;
+    ` + sh.vertexShader.replace("#include <begin_vertex>", `
+      float m = uMix;
+      vec3 p = mix(aA, aB, m);
+      float bump = 4.0 * m * (1.0 - m);
+      vec3 n3 = vec3(sin(uTime * .7 + aSeed * 31.0), cos(uTime * .6 + aSeed * 17.0), sin(uTime * .5 + aSeed * 11.0));
+      p += n3 * (0.004 + bump * 0.32 * aSeed);
+      // ветер: легкие песчинки срываются и тянутся шлейфом
+      float w = uWind * smoothstep(.3, 1.0, aSeed);
+      p += uWindDir * w * (0.5 + aSeed * 1.8) + n3 * w * .3;
+      // клик: песок разлетается
+      p += normalize(p + vec3(.0001)) * uEx * (.4 + aSeed * .9) + n3 * uEx * .3;
+      // курсор: песчинки расступаются
+      vec3 dm = p - uMouse; float dd = length(dm);
+      p += normalize(dm + vec3(.0001)) * smoothstep(.8, .0, dd) * .38 * uHover;
+      // появление: песок слетается из облака
+      p = mix(aDir * (4.0 + aSeed * 5.0), p, uIntro);
+      vShade = clamp(length(mix(aA, aB, m)) / 1.6, .0, 1.0);
+      vTint = aTint;
+      vec3 transformed = position * (0.7 + aSeed * .7) + p;
+    `);
+    sh.fragmentShader = `varying float vShade; varying float vTint;
+    ` + sh.fragmentShader.replace("#include <color_fragment>", `
+      #include <color_fragment>
+      diffuseColor.rgb *= mix(.8, 1.0, smoothstep(.55, 1.0, vShade));      // внутри "тень", снаружи светлее
+      diffuseColor.rgb = mix(diffuseColor.rgb, diffuseColor.rgb * vec3(.86, .93, 1.0), step(.7, vTint)); // часть песчинок с голубым оттенком
+    `);
+  };
+  const sand = new THREE.Mesh(geo, mat);
+  sand.frustumCulled = false;
+  const crystal = new THREE.Group();
+  crystal.add(sand);
+  scene.add(crystal);
+
+  // Тонкие кольца вокруг (как орбиты)
+  const ringMat = new THREE.MeshStandardMaterial({ color: "#ffffff", roughness: .4, metalness: 0, transparent: true, opacity: .7 });
+  const rings = [[2.45, .006, .35, .1], [2.95, .004, -.25, .5], [3.5, .003, .1, -.4]].map(([r, tube, rx, rz]) => {
+    const m = new THREE.Mesh(new THREE.TorusGeometry(r, tube, 6, 160), ringMat);
+    m.rotation.set(Math.PI / 2 + rx, 0, rz); crystal.add(m); return m;
+  });
+
+  // Где кристалл на экране (напротив панели) и как стоит камера
+  const side = [1, -1, 1, -1, 1, -1];
+  const camA = [0, .38, -.32, .28, -.36, .1];
+  const camE = [.06, .2, -.06, .36, .1, .04];
+  const camR = [8.2, 7.6, 7.8, 8.2, 7.4, 8];
+
+  // ---------- Снег ----------
   const sprite = (() => {
     const c = document.createElement("canvas"); c.width = c.height = 64;
     const g = c.getContext("2d"); const gr = g.createRadialGradient(32, 32, 0, 32, 32, 32);
@@ -80,46 +149,20 @@ function init() {
     g.fillStyle = gr; g.fillRect(0, 0, 64, 64);
     return new THREE.CanvasTexture(c);
   })();
-  const coreGeo = new THREE.BufferGeometry();
-  const coreN = 260, coreP = new Float32Array(coreN * 3);
-  for (let i = 0; i < coreN; i++) { const r = Math.cbrt(Math.random()) * .9, a = Math.random() * 6.283, u = Math.random() * 2 - 1, s = Math.sqrt(1 - u * u); coreP.set([r * s * Math.cos(a), r * u, r * s * Math.sin(a)], i * 3); }
-  coreGeo.setAttribute("position", new THREE.BufferAttribute(coreP, 3));
-  const core = new THREE.Points(coreGeo, new THREE.PointsMaterial({ map: sprite, color: "#7fd6f5", size: .09, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending }));
-  crystal.add(core);
-
-  // ---------- Формы для разделов ----------
-  const rnd = (a, b) => a + Math.random() * (b - a);
-  const forms = [
-    shards.map(s => ({ p: s.home.clone(), r: new THREE.Euler() })),                                  // кристалл
-    shards.map((s, i) => { const a = i / N * Math.PI * 2; return { p: new THREE.Vector3(Math.cos(a) * 2.1, Math.sin(i * 1.7) * .3, Math.sin(a) * 2.1), r: new THREE.Euler(rnd(-3, 3), rnd(-3, 3), rnd(-3, 3)) }; }), // кольцо
-    shards.map((s, i) => { const a = i * .55; return { p: new THREE.Vector3(Math.cos(a) * 1.0, (i / N - .5) * 3.8, Math.sin(a) * 1.0), r: new THREE.Euler(0, -a, rnd(-.4, .4)) }; }),               // спираль
-    shards.map((s, i) => ({ p: new THREE.Vector3((i % 5 - 2) * .62, ((i / 5 | 0) % 4 - 1.5) * .62, ((i / 20 | 0) - 1.5) * .62), r: new THREE.Euler(0, 0, 0) })),                                        // решетка
-    shards.map(s => ({ p: s.home.clone().normalize().multiplyScalar(1.95), r: new THREE.Euler(rnd(-1, 1), rnd(-1, 1), rnd(-1, 1)) })),                                                                  // сфера
-    shards.map(s => ({ p: s.home.clone(), r: new THREE.Euler() }))                                     // снова кристалл
-  ];
-  // Где кристалл на экране (напротив панели) и как стоит камера
-  const side = [1, -1, 1, -1, 1, -1];
-  const camA = [0, .38, -.32, .28, -.36, .1];   // поворот вокруг
-  const camE = [.06, .2, -.06, .36, .1, .04];   // высота
-  const camR = [8.2, 7.4, 7.6, 8, 7, 8];        // расстояние
-
-  // ---------- Снег ----------
   const SN = isMobile ? 500 : 1400;
   const snowP = new Float32Array(SN * 3), snowS = new Float32Array(SN);
   for (let i = 0; i < SN; i++) { snowP.set([rnd(-14, 14), rnd(-8, 8), rnd(-14, 6)], i * 3); snowS[i] = rnd(.2, 1); }
   const snowGeo = new THREE.BufferGeometry(); snowGeo.setAttribute("position", new THREE.BufferAttribute(snowP, 3));
-  const snow = new THREE.Points(snowGeo, new THREE.PointsMaterial({ map: sprite, color: "#ffffff", size: .07, transparent: true, opacity: .85, depthWrite: false, fog: true }));
-  scene.add(snow);
+  scene.add(new THREE.Points(snowGeo, new THREE.PointsMaterial({ map: sprite, color: "#ffffff", size: .07, transparent: true, opacity: .85, depthWrite: false, fog: true })));
 
   // ---------- Глубина фона ----------
-  // 1) Далекие кристаллы, парящие в тумане
   const farGroup = new THREE.Group(); scene.add(farGroup);
-  const farMat = new THREE.MeshPhysicalMaterial({ color: "#ffffff", roughness: .25, metalness: 0, clearcoat: 1, envMapIntensity: 1.2, flatShading: true, transparent: true, opacity: .9 });
+  const farMat = new THREE.MeshStandardMaterial({ color: "#f4f7f9", roughness: .5, metalness: 0, flatShading: true, envMapIntensity: .8 });
   const farEdge = new THREE.LineBasicMaterial({ color: "#ffffff", transparent: true, opacity: .4, fog: true });
   const FAR = isMobile ? 10 : 22, far = [];
   for (let k = 0; k < FAR; k++) {
     const g = Math.random() < .5 ? new THREE.OctahedronGeometry(rnd(.25, .8)) : new THREE.IcosahedronGeometry(rnd(.25, .7), 0);
-    g.scale(1, rnd(1.2, 2.2), 1); // вытянутые, как ледяные кристаллы
+    g.scale(1, rnd(1.2, 2.2), 1);
     const m = new THREE.Mesh(g, farMat);
     m.add(new THREE.LineSegments(new THREE.EdgesGeometry(g), farEdge));
     m.position.set(rnd(-16, 16), rnd(-5, 6), rnd(-24, -7));
@@ -127,11 +170,9 @@ function init() {
     farGroup.add(m);
     far.push({ m, y: m.position.y, sp: rnd(.1, .35), ph: rnd(0, 6) });
   }
-
-  // 2) Медленно плывущие слои облаков (процедурный шум)
-  const cloudMat = (seed, op) => new THREE.ShaderMaterial({
+  const cloudMat = (sd, op) => new THREE.ShaderMaterial({
     transparent: true, depthWrite: false, fog: false,
-    uniforms: { uTime: { value: 0 }, uSeed: { value: seed }, uOp: { value: op } },
+    uniforms: { uTime: { value: 0 }, uSeed: { value: sd }, uOp: { value: op } },
     vertexShader: `varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
     fragmentShader: `
       varying vec2 vUv; uniform float uTime, uSeed, uOp;
@@ -150,8 +191,6 @@ function init() {
     const m = new THREE.Mesh(new THREE.PlaneGeometry(46, 16), cloudMat(sd, op));
     m.position.set(0, -2.5 + sd * .3, z); scene.add(m); return m;
   });
-
-  // 3) Мягкие лучи света сверху
   const rayMat = new THREE.ShaderMaterial({
     transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
     uniforms: { uTime: { value: 0 } },
@@ -160,17 +199,14 @@ function init() {
       void main(){ float a = smoothstep(0.0, .5, vUv.x) * smoothstep(1.0, .5, vUv.x) * pow(vUv.y, 1.6);
         a *= .5 + .5 * sin(uTime * .35 + vUv.x * 3.0); gl_FragColor = vec4(1.0, 1.0, 1.0, a * .16); }`
   });
-  const rays = new THREE.Group(); scene.add(rays);
   [[-3, 1.4, .18], [1.5, 2.4, -.12], [5, 1.8, .22], [8, 2.8, -.05]].forEach(([x, w, rot]) => {
     const m = new THREE.Mesh(new THREE.PlaneGeometry(w, 18), rayMat);
-    m.position.set(x, 4, -10); m.rotation.z = rot + .35; rays.add(m);
+    m.position.set(x, 4, -10); m.rotation.z = rot + .35; scene.add(m);
   });
 
-  // ---------- Постобработка ----------
+  // ---------- Рендер ----------
   const composer = new EffectComposer(renderer);
   composer.addPass(new RenderPass(scene, camera));
-  const bloom = new UnrealBloomPass(new THREE.Vector2(innerWidth, innerHeight), .35, .6, .88);
-  // свечение не используем: на светлом фоне оно почти незаметно, а битые пиксели раздувало в черные пятна
   composer.addPass(new OutputPass());
 
   let lastW = 0, lastH = 0;
@@ -192,76 +228,77 @@ function init() {
     for (let i = 0; i < mids.length - 1; i++) if (y < mids[i + 1]) return i + (y - mids[i]) / (mids[i + 1] - mids[i]);
     return mids.length - 1;
   }
-  const mouse = { x: 0, y: 0, tx: 0, ty: 0 };
 
-  // ---------- Интерактив: наведение и клик по кристаллу ----------
-  const ray = new THREE.Raycaster(), ndc = new THREE.Vector2(9, 9);
-  const meshes = shards.map(s => s.m);
+  // ---------- Мышь и клик ----------
+  const mouse = { x: 0, y: 0, tx: 0, ty: 0 };
+  const ray = new THREE.Raycaster(), ndc = new THREE.Vector2(9, 9), plane = new THREE.Plane(), hitP = new THREE.Vector3(), wp = new THREE.Vector3();
   let hover = false, hoverAmt = 0, ex = 0, exV = 0;
-  const spin = shards.map(() => new THREE.Vector3((Math.random() - .5) * 2, (Math.random() - .5) * 2, (Math.random() - .5) * 2));
-  addEventListener("pointermove", e => { ndc.set(e.clientX / innerWidth * 2 - 1, -(e.clientY / innerHeight) * 2 + 1); }, { passive: true });
+  addEventListener("pointermove", e => {
+    ndc.set(e.clientX / innerWidth * 2 - 1, -(e.clientY / innerHeight) * 2 + 1);
+    mouse.tx = e.clientX / innerWidth - .5; mouse.ty = e.clientY / innerHeight - .5;
+  }, { passive: true });
   const overUI = el => el && el.closest && el.closest("a, button, .panel, .hud, .intro > *, input");
-  addEventListener("pointerdown", e => {
-    if (overUI(e.target) || !hover) return;
-    exV += 6; // осколки разлетаются
-    document.dispatchEvent(new CustomEvent("crystal"));
-  });
-  // на телефоне: тап по пустому месту рядом с кристаллом
+  const hitCrystal = () => { ray.setFromCamera(ndc, camera); crystal.getWorldPosition(wp); return ray.ray.distanceToPoint(wp) < 1.75 * crystal.scale.x; };
+  const boom = () => { exV += 5.5; document.dispatchEvent(new CustomEvent("crystal")); };
+  addEventListener("pointerdown", e => { if (!overUI(e.target) && hover) boom(); });
   addEventListener("touchend", e => {
     const tch = e.changedTouches[0]; if (!tch || overUI(e.target)) return;
     ndc.set(tch.clientX / innerWidth * 2 - 1, -(tch.clientY / innerHeight) * 2 + 1);
-    ray.setFromCamera(ndc, camera);
-    if (ray.intersectObjects(meshes, false).length) { exV += 6; document.dispatchEvent(new CustomEvent("crystal")); }
+    if (hitCrystal()) boom();
   }, { passive: true });
-  addEventListener("pointermove", e => { mouse.tx = e.clientX / innerWidth - .5; mouse.ty = e.clientY / innerHeight - .5; }, { passive: true });
 
   // ---------- Цикл ----------
   const clock = new THREE.Clock();
-  let prog = progress(), intro = 0, slow = 0, bloomOn = !isMobile;
+  let prog = progress(), intro = 0, curI = -1, wind = 0, lastProg = prog;
   const sm = x => x * x * (3 - 2 * x);
-  const tmpQ = new THREE.Quaternion(), qA = new THREE.Quaternion(), qB = new THREE.Quaternion();
+  const invQ = new THREE.Quaternion(), wdir = new THREE.Vector3();
+  const dbg = new URLSearchParams(location.search);
 
   renderer.setAnimationLoop(() => {
     const dt = Math.min(clock.getDelta(), .05), t = clock.elapsedTime;
-    if (t > 3 && bloomOn) { slow = dt > .045 ? slow + 1 : Math.max(0, slow - 1); if (slow > 40) { bloom.enabled = false; bloomOn = false; } }
-    const dbgAt = location.search.includes("at=");
-    intro = dbgAt ? 1 : Math.min(1, intro + dt * .45);
-    prog = dbgAt ? +new URLSearchParams(location.search).get("at") : prog + (progress() - prog) * Math.min(1, dt * 4);
+    const dbgAt = dbg.has("at");
+    intro = dbgAt ? 1 : Math.min(1, intro + dt * .4);
+    prog = dbgAt ? +dbg.get("at") : prog + (progress() - prog) * Math.min(1, dt * 3.5);
     mouse.x += (mouse.tx - mouse.x) * .05; mouse.y += (mouse.ty - mouse.y) * .05;
 
+    // какая пара форм и насколько перетекла
     const i = Math.min(Math.floor(prog), forms.length - 2), f = sm(Math.min(1, prog - i));
-    const burst = Math.sin(f * Math.PI); // в середине перехода осколки чуть разлетаются
+    if (i !== curI) { curI = i; aA.array.set(forms[i]); aA.needsUpdate = true; aB.array.set(forms[i + 1]); aB.needsUpdate = true; }
+    U.uMix.value = f;
+    U.uTime.value = reduce ? 0 : t;
+    U.uIntro.value = 1 - Math.pow(1 - intro, 3);
 
-    // осколки
-    for (let k = 0; k < N; k++) {
-      const s = shards[k], A = forms[i][k], B = forms[i + 1][k];
-      s.m.position.lerpVectors(A.p, B.p, f).addScaledVector(s.home, burst * .15 * (1 + s.rnd) + hoverAmt * .09 + ex * (.45 + s.rnd * .6));
-      qA.setFromEuler(A.r); qB.setFromEuler(B.r);
-      s.m.quaternion.copy(tmpQ.slerpQuaternions(qA, qB, f));
-      if (ex > .002) { s.m.rotateX(spin[k].x * ex * 2.5); s.m.rotateY(spin[k].y * ex * 2.5); } // осколки кружатся при разлете
-      if (!reduce) s.m.position.y += Math.sin(t * .8 + k) * .02 * (i > 0 || f > 0 ? 1 : .3);
-    }
-    // появление кристалла
-    const e = 1 - Math.pow(1 - intro, 3);
-    crystal.scale.setScalar(.6 + .4 * e);
+    // ветер от скорости прокрутки: песок срывается шлейфом
+    const vel = dt > 0 ? (prog - lastProg) / dt : 0; lastProg = prog;
+    wind += (Math.min(1.3, Math.abs(vel) * 1.6) - wind) * Math.min(1, dt * (Math.abs(vel) > .02 ? 6 : 1.6));
+    U.uWind.value = reduce ? 0 : wind;
+    const sideNow = side[i] + (side[i + 1] - side[i]) * f;
+    wdir.set(-sideNow * .55, vel >= 0 ? 1 : -1, .25).normalize();
+    invQ.copy(crystal.quaternion).invert(); wdir.applyQuaternion(invQ);
+    U.uWindDir.value.copy(wdir);
 
-    // наведение: луч из курсора в кристалл
-    ray.setFromCamera(ndc, camera);
-    const h = ray.intersectObjects(meshes, false).length > 0;
+    // клик: упругая "пружина" возвращает песок на место
+    exV += (-ex * 30 - exV * 5) * dt; ex = Math.max(-.08, ex + exV * dt);
+    U.uEx.value = ex;
+
+    // курсор над кристаллом: песчинки расступаются вокруг точки курсора
+    const h = hitCrystal();
     if (h !== hover) { hover = h; document.dispatchEvent(new CustomEvent("crystalhover", { detail: h })); }
-    hoverAmt += ((hover ? 1 : 0) - hoverAmt) * .08;
-    // разлет по клику: упругая "пружина" возвращает осколки на место
-    exV += (-ex * 38 - exV * 5.5) * dt;
-    ex = Math.max(-.1, ex + exV * dt);
+    hoverAmt += ((hover ? 1 : 0) - hoverAmt) * .1;
+    U.uHover.value = hoverAmt;
+    crystal.getWorldPosition(wp);
+    plane.setFromNormalAndCoplanarPoint(camera.getWorldDirection(hitP).negate(), wp);
+    if (ray.ray.intersectPlane(plane, hitP)) U.uMouse.value.copy(crystal.worldToLocal(hitP.clone()));
 
-    crystal.rotation.y = (reduce ? 0 : t * .12) + prog * .9 + mouse.x * .4;
-    crystal.rotation.x = mouse.y * .2;
-    const sx = side[i] + (side[i + 1] - side[i]) * f;
+    // положение и вращение
+    const e = U.uIntro.value;
+    crystal.scale.setScalar(.75 + .25 * e);
+    crystal.rotation.y = (reduce ? 0 : t * .1) + prog * .9 + mouse.x * .35;
+    crystal.rotation.x = mouse.y * .18;
     const wide = camera.aspect > 1.1;
-    crystal.position.x = wide ? sx * Math.min(2.4, camera.aspect * 1.25) : 0;
+    crystal.position.x = wide ? sideNow * Math.min(2.4, camera.aspect * 1.25) : 0;
     crystal.position.y = wide ? 0 : 1.1;
-    glow.intensity = 4 + Math.sin(t * 1.4) * 1.2 + burst * 4 + hoverAmt * 3 + ex * 14;
-    core.rotation.y = t * .2;
+    rings.forEach((r, k) => { r.rotation.z += dt * (.05 + k * .03) * (k % 2 ? -1 : 1); });
 
     // камера
     const L = arr => arr[i] + (arr[i + 1] - arr[i]) * f;
@@ -269,26 +306,18 @@ function init() {
     camera.position.set(Math.sin(a) * Math.cos(el) * r, Math.sin(el) * r, Math.cos(a) * Math.cos(el) * r);
     camera.lookAt(crystal.position.x * .35, crystal.position.y * .5, 0);
 
-    // фон: далекие кристаллы покачиваются, облака плывут, лучи дышат
+    // фон
     if (!reduce) {
       far.forEach(o => { o.m.position.y = o.y + Math.sin(t * o.sp + o.ph) * .4; o.m.rotation.y += dt * o.sp * .3; });
       clouds.forEach(c => { c.material.uniforms.uTime.value = t; });
       rayMat.uniforms.uTime.value = t;
+      const p = snowGeo.attributes.position.array;
+      for (let k = 0; k < SN; k++) { p[k * 3 + 1] -= dt * .25 * snowS[k]; p[k * 3] += Math.sin(t * .5 + k) * dt * .05; if (p[k * 3 + 1] < -8) p[k * 3 + 1] = 8; }
+      snowGeo.attributes.position.needsUpdate = true;
     }
     farGroup.rotation.y = prog * .12 + mouse.x * .06;
     clouds.forEach((c, k) => { c.position.x = -prog * (.6 + k * .3) + mouse.x * (k + 1) * .4; });
 
-    // снег медленно падает
-    if (!reduce) {
-      const p = snowGeo.attributes.position.array;
-      for (let k = 0; k < SN; k++) {
-        p[k * 3 + 1] -= dt * .25 * snowS[k];
-        p[k * 3] += Math.sin(t * .5 + k) * dt * .05;
-        if (p[k * 3 + 1] < -8) p[k * 3 + 1] = 8;
-      }
-      snowGeo.attributes.position.needsUpdate = true;
-    }
-
-    if (bloomOn || !isMobile) composer.render(); else composer.render();
+    composer.render();
   });
 }

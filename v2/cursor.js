@@ -6,9 +6,9 @@
 
   const cur = document.createElement("div");
   cur.className = "cur";
-  cur.innerHTML = '<i class="cur-dot"></i><i class="cur-ring"><span>CLICK</span></i>';
+  cur.innerHTML = '<i class="cur-dot"></i>';
   document.body.appendChild(cur);
-  const dot = cur.querySelector(".cur-dot"), ring = cur.querySelector(".cur-ring");
+  const dot = cur.querySelector(".cur-dot");
 
   // Морозный след
   const cv = document.createElement("canvas");
@@ -40,7 +40,6 @@
   (function loop() {
     rx += (mx - rx) * .18; ry += (my - ry) * .18;
     dot.style.transform = `translate(${mx}px, ${my}px)`;
-    ring.style.transform = `translate(${rx}px, ${ry}px)`;
 
     g.clearRect(0, 0, W, H);
     for (let i = flakes.length - 1; i >= 0; i--) {
