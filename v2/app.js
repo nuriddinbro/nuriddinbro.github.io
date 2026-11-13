@@ -161,8 +161,9 @@ function init() {
       // след курсора: песчинки вдоль пути разлетаются и плавно оседают
       for (int k = 0; k < 12; k++) {
         vec4 tp = uTrail[k];
-        float age = tp.w - aSeed * .35;                                   // своя задержка у каждой песчинки
-        float env = smoothstep(0.0, .75, age) * (1.0 - smoothstep(.9, 3.4, age));
+        float age = tp.w - aSeed * .06;                                   // почти без задержки
+        float rise = 1.0 - pow(1.0 - clamp(age / .32, 0.0, 1.0), 3.0);    // сразу реагирует, мягко тормозит
+        float env = rise * (1.0 - smoothstep(.45, 2.6, age));
         vec3 dv = p - tp.xyz; dv -= dot(dv, uView) * uView; float dk = length(dv);
         float kk = env * pow(smoothstep(.85, .0, dk), 2.0);
         p += normalize(dv + vec3(.0001)) * kk * .24 + n3 * kk * .1 - uView * kk * .16;
@@ -357,7 +358,7 @@ function init() {
     // курсор над кристаллом: песчинки расступаются вокруг точки курсора
     const h = hitCrystal();
     if (h !== hover) { hover = h; document.dispatchEvent(new CustomEvent("crystalhover", { detail: h })); }
-    hoverAmt += ((hover && performance.now() - lastMove < 600 ? 1 : 0) - hoverAmt) * Math.min(1, dt * 1.2);
+    hoverAmt += ((hover && performance.now() - lastMove < 600 ? 1 : 0) - hoverAmt) * Math.min(1, dt * 4);
     U.uHover.value = hoverAmt;
     // след курсора по шару: новые точки, старые плавно "гаснут"
     const tr = U.uTrail.value;
@@ -367,7 +368,7 @@ function init() {
     { const vd = camera.getWorldDirection(new THREE.Vector3()); invQ.copy(crystal.quaternion).invert(); U.uView.value.copy(vd.applyQuaternion(invQ)).normalize(); }
     if (ray.ray.intersectPlane(plane, hitP)) {
       const loc = crystal.worldToLocal(hitP.clone());
-      U.uMouse.value.lerp(loc, Math.min(1, dt * 3));
+      U.uMouse.value.lerp(loc, Math.min(1, dt * 9));
       const lastT = tr[trI];
       const moved = performance.now() - lastMove < 120;
       if (hover && moved && Math.hypot(loc.x - lastT.x, loc.y - lastT.y, loc.z - lastT.z) > .1) { trI = (trI + 1) % 12; tr[trI].set(loc.x, loc.y, loc.z, 0); trAge[trI] = 0; }
