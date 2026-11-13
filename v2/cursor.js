@@ -15,11 +15,11 @@
   cv.className = "frost";
   document.body.appendChild(cv);
   const g = cv.getContext("2d");
-  let W, H; const dpr = Math.min(devicePixelRatio || 1, 2);
+  let W, H; const dpr = Math.min(devicePixelRatio || 1, 1.5);
   const size = () => { W = cv.width = innerWidth * dpr; H = cv.height = innerHeight * dpr; };
   size(); addEventListener("resize", size);
 
-  const flakes = [];
+  const flakes = []; let dirty = false;
   let mx = -100, my = -100, rx = -100, ry = -100, lx = 0, ly = 0;
   addEventListener("pointermove", e => {
     mx = e.clientX; my = e.clientY;
@@ -38,10 +38,12 @@
   }
 
   (function loop() {
-    rx += (mx - rx) * .18; ry += (my - ry) * .18;
+    requestAnimationFrame(loop);
     dot.style.transform = `translate(${mx}px, ${my}px)`;
 
+    if (!flakes.length && !dirty) return; // нечего рисовать - холст не трогаем
     g.clearRect(0, 0, W, H);
+    dirty = flakes.length > 0;
     for (let i = flakes.length - 1; i >= 0; i--) {
       const f = flakes[i];
       f.x += f.vx; f.y += f.vy; f.a -= .016; f.rot += .02;
@@ -50,10 +52,9 @@
       g.translate(f.x * dpr, f.y * dpr); g.rotate(f.rot);
       g.globalAlpha = f.a * .9;
       if (f.star) { g.strokeStyle = "rgba(28,134,181,.9)"; g.lineWidth = .9 * dpr; snowflake(f.r * dpr * 1.4); }
-      else { g.fillStyle = "rgba(255,255,255,1)"; g.shadowColor = "rgba(28,134,181,.6)"; g.shadowBlur = 4 * dpr; g.beginPath(); g.arc(0, 0, f.r * dpr * .55, 0, 6.28); g.fill(); }
+      else { g.fillStyle = "rgba(28,134,181,.55)"; g.beginPath(); g.arc(0, 0, f.r * dpr * .5, 0, 6.28); g.fill(); } // без размытия тени - намного легче
       g.restore();
     }
-    requestAnimationFrame(loop);
   })();
 
   // Кольцо реагирует на кнопки/ссылки и на кристалл

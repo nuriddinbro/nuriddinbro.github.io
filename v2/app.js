@@ -4,9 +4,6 @@
 // кристалл -> кольцо -> двойная спираль -> куб -> планета с кольцом -> снова кристалл.
 import * as THREE from "three";
 import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
-import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
-import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
-import { OutputPass } from "three/addons/postprocessing/OutputPass.js";
 
 const isMobile = matchMedia("(max-width: 860px)").matches || matchMedia("(pointer: coarse)").matches;
 const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -14,12 +11,12 @@ const FOG = new THREE.Color("#dde4ea");
 
 let renderer;
 try {
-  renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: "high-performance" });
+  renderer = new THREE.WebGLRenderer({ antialias: false, alpha: true, powerPreference: "high-performance" });
 } catch (e) { renderer = null; }
 if (renderer) init();
 
 function init() {
-  const dpr = Math.min(devicePixelRatio || 1, isMobile ? 1.3 : 1.6);
+  let dpr = Math.min(devicePixelRatio || 1, isMobile ? 1.2 : 1.4);
   renderer.setPixelRatio(dpr);
   renderer.setSize(innerWidth, innerHeight);
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -41,7 +38,7 @@ function init() {
   const rim = new THREE.DirectionalLight("#b8e2f2", 1.0); rim.position.set(-6, -2, -4); scene.add(rim);
 
   const rnd = (a, b) => a + Math.random() * (b - a);
-  const N = isMobile ? 5200 : 14000;
+  const N = isMobile ? 4500 : 12000;
 
   // ---------- Формы из песка: у каждой песчинки своя точка в каждой форме ----------
   // шапка - шар, опыт - силуэт, портфолио - щит с галочкой, навыки - гарнитура, языки - Сатурн, контакты - конверт
@@ -117,7 +114,7 @@ function init() {
   })();
 
   // ---------- Песчинки: InstancedMesh + шейдер, который двигает их на видеокарте ----------
-  const grainGeo = new THREE.IcosahedronGeometry(.038, 0);
+  const grainGeo = new THREE.OctahedronGeometry(.046, 0); // 8 граней вместо 20 - в 2,5 раза легче
   const geo = new THREE.InstancedBufferGeometry().copy(grainGeo);
   geo.instanceCount = N;
   // все 6 фигур загружаются в видеокарту один раз - дальше только смешиваются (без лагов)
@@ -229,24 +226,36 @@ function init() {
     farGroup.add(m);
     far.push({ m, y: m.position.y, sp: rnd(.1, .35), ph: rnd(0, 6) });
   }
+  // облака: шум рисуется ОДИН раз в картинку, дальше картинка просто медленно плывет (почти без нагрузки)
+  const cloudTex = (() => {
+    const S = 256, c = document.createElement("canvas"); c.width = S; c.height = S;
+    const g = c.getContext("2d"), img = g.createImageData(S, S);
+    const h = (x, y) => { const v = Math.sin(x * 127.1 + y * 311.7) * 43758.5453; return v - Math.floor(v); };
+    const n = (x, y) => { const xi = Math.floor(x), yi = Math.floor(y), xf = x - xi, yf = y - yi, u = xf * xf * (3 - 2 * xf), w = yf * yf * (3 - 2 * yf);
+      const X = v => ((v % 8) + 8) % 8; // бесшовно по краям
+      const a = h(X(xi), X(yi)), b = h(X(xi + 1), X(yi)), cc = h(X(xi), X(yi + 1)), d = h(X(xi + 1), X(yi + 1));
+      return a + (b - a) * u + (cc - a) * w + (a - b - cc + d) * u * w; };
+    for (let y = 0; y < S; y++) for (let x = 0; x < S; x++) {
+      let v = 0, amp = .5, fx = x / S * 8, fy = y / S * 8;
+      for (let o = 0; o < 4; o++) { v += amp * n(fx * (1 << o), fy * (1 << o)); amp *= .5; }
+      const al = Math.max(0, Math.min(1, (v - .42) / .38)) * 255, i = (y * S + x) * 4;
+      img.data[i] = img.data[i + 1] = img.data[i + 2] = 255; img.data[i + 3] = al;
+    }
+    g.putImageData(img, 0, 0);
+    const tx = new THREE.CanvasTexture(c); tx.wrapS = tx.wrapT = THREE.RepeatWrapping; return tx;
+  })();
   const cloudMat = (sd, op) => new THREE.ShaderMaterial({
     transparent: true, depthWrite: false, fog: false,
-    uniforms: { uTime: { value: 0 }, uSeed: { value: sd }, uOp: { value: op } },
+    uniforms: { uTime: { value: 0 }, uSeed: { value: sd }, uOp: { value: op }, uTex: { value: cloudTex } },
     vertexShader: `varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
     fragmentShader: `
-      varying vec2 vUv; uniform float uTime, uSeed, uOp;
-      float h(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7)) + uSeed) * 43758.5453); }
-      float n(vec2 p){ vec2 i = floor(p), f = fract(p); f = f*f*(3.0-2.0*f);
-        return mix(mix(h(i), h(i+vec2(1,0)), f.x), mix(h(i+vec2(0,1)), h(i+vec2(1,1)), f.x), f.y); }
-      float fbm(vec2 p){ float v = 0.0, a = .5; for (int i = 0; i < 5; i++) { v += a * n(p); p *= 2.03; a *= .5; } return v; }
+      varying vec2 vUv; uniform float uTime, uSeed, uOp; uniform sampler2D uTex;
       void main(){
-        vec2 p = vUv * vec2(3.0, 1.6) + vec2(uTime * .012, 0.0);
-        float c = fbm(p + fbm(p * 1.3 + uTime * .01));
+        float c = texture2D(uTex, vUv * vec2(1.8, .8) + vec2(uTime * .006 + uSeed, uSeed * .37)).a;
         float edge = smoothstep(0.0, .25, vUv.x) * smoothstep(1.0, .75, vUv.x) * smoothstep(0.0, .3, vUv.y) * smoothstep(1.0, .6, vUv.y);
-        gl_FragColor = vec4(vec3(1.0), smoothstep(.45, .85, c) * edge * uOp);
+        gl_FragColor = vec4(vec3(1.0), c * edge * uOp);
       }`
-  });
-  const clouds = [[-9, .55, 1.3], [-15, .45, 7.7], [-4.5, .28, 3.1]].map(([z, op, sd]) => {
+  });  const clouds = [[-9, .55, 1.3], [-15, .45, 7.7], [-4.5, .28, 3.1]].map(([z, op, sd]) => {
     const m = new THREE.Mesh(new THREE.PlaneGeometry(46, 16), cloudMat(sd, op));
     m.position.set(0, -2.5 + sd * .3, z); scene.add(m); return m;
   });
@@ -264,17 +273,15 @@ function init() {
   });
 
   // ---------- Рендер ----------
-  const composer = new EffectComposer(renderer);
-  composer.addPass(new RenderPass(scene, camera));
-  composer.addPass(new OutputPass());
+  // рисуем сразу на экран (без лишнего прохода обработки)
 
   let lastW = 0, lastH = 0;
   function resize() {
     if (innerWidth === lastW && Math.abs(innerHeight - lastH) < 140 && lastW) return; // адресная строка на телефоне
     lastW = innerWidth; lastH = innerHeight;
     camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix();
-    renderer.setSize(innerWidth, innerHeight); composer.setSize(innerWidth, innerHeight);
-    composer.render();
+    renderer.setSize(innerWidth, innerHeight);
+    renderer.render(scene, camera);
   }
   resize(); addEventListener("resize", resize);
 
@@ -308,7 +315,7 @@ function init() {
 
   // ---------- Цикл ----------
   const clock = new THREE.Clock();
-  let prog = progress(), intro = 0, wind = 0, lastProg = prog, trI = 0;
+  let prog = progress(), intro = 0, wind = 0, lastProg = prog, trI = 0, lowered = false, frames = 0, ftime = 0;
   const trAge = new Array(8).fill(99);
   const sm = x => x * x * x * (x * (x * 6 - 15) + 10); // очень плавная кривая (без рывков в начале и в конце)
   const invQ = new THREE.Quaternion(), wdir = new THREE.Vector3();
@@ -390,6 +397,9 @@ function init() {
     farGroup.rotation.y = prog * .12 + mouse.x * .06;
     clouds.forEach((c, k) => { c.position.x = -prog * (.6 + k * .3) + mouse.x * (k + 1) * .4; });
 
-    composer.render();
+    renderer.render(scene, camera);
+
+    // автоподстройка: если кадры долгие - меньше песчинок и четкость
+    if (t > 2.5 && !lowered) { frames++; ftime += dt; if (frames >= 90) { if (ftime / frames > .022) { lowered = true; renderer.setPixelRatio(1); geo.instanceCount = Math.floor(N * .6); } frames = 0; ftime = 0; } }
   });
 }

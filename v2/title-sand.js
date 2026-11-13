@@ -16,7 +16,7 @@
   }
   size(); addEventListener("resize", size);
 
-  const grains = [];
+  const grains = []; let dirty = false;
   let hover = null, visible = true;
   title.addEventListener("pointermove", e => { hover = { x: e.clientX, y: e.clientY }; });
   title.addEventListener("pointerleave", () => { hover = null; });
@@ -40,7 +40,7 @@
   let acc = 0;
   (function loop() {
     requestAnimationFrame(loop);
-    if (!visible || !title.classList.contains("play")) return;
+    if (!visible || !title.classList.contains("play")) { if (dirty) { g.clearRect(0, 0, W, H); dirty = false; grains.length = 0; } return; }
     // постоянный легкий "ветер": несколько песчинок в секунду
     acc += .6;
     const src = acc >= 1 ? sources() : null;
@@ -48,7 +48,9 @@
     // курсор над заголовком: песок сыплется от точки курсора
     if (hover) for (let k = 0; k < 2; k++) spawn(null, hover);
 
+    if (!grains.length && !dirty) return;
     g.clearRect(0, 0, W, H);
+    dirty = grains.length > 0;
     for (let i = grains.length - 1; i >= 0; i--) {
       const p = grains[i];
       p.x += p.vx; p.y += p.vy; p.vy += .006; p.life -= .009;
