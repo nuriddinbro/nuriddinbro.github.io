@@ -242,6 +242,12 @@ html.cur-on, html.cur-on a, html.cur-on button { cursor: none; }
 /* Песчинки на заголовке */
 .title-sand { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 2; }
 
+/* Подсказка про звук */
+.snd-hint { position: absolute; top: 64px; right: 36px; font: 500 10.5px var(--mono); letter-spacing: .08em; color: var(--ink-2); background: rgba(255,255,255,.6); backdrop-filter: blur(8px); padding: 7px 10px; border: 1px solid var(--line); opacity: 0; transform: translateY(-6px); transition: opacity .6s, transform .6s; pointer-events: none; }
+.snd-hint.show { opacity: 1; transform: none; animation: hintFade 9s forwards; }
+@keyframes hintFade { 85% { opacity: 1; } to { opacity: 0; } }
+@media (max-width: 860px) { .snd-hint { top: 58px; right: 14px; } }
+
 /* Кнопка звука */
 .snd { display: inline-flex; align-items: center; gap: 8px; border: 1px solid var(--line); background: transparent; cursor: pointer; padding: 7px 10px; font: 600 10px var(--mono); letter-spacing: .12em; color: var(--muted); }
 .snd i { display: inline-flex; align-items: flex-end; gap: 2px; height: 10px; }

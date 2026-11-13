@@ -22,6 +22,7 @@ const EN = {
   ch5_t: "Contact", ch5_s: "The next step is yours",
   hud_scroll: "scroll",
   music_by: "Music",
+  snd_hint: "click anywhere to turn on music",
   hero_hint: "scroll down - I will show you what I can do",
   cv: "Download CV · PDF",
   stat_years: "years in customer service",

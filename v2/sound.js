@@ -38,47 +38,6 @@
     ctx.createMediaElementSource(track).connect(music);
   }
 
-  // Ноты в формате MIDI (60 = до первой октавы)
-  const midi = n => 440 * Math.pow(2, (n - 69) / 12);
-  // Аккорды: Am9 - Fmaj7 - Cmaj7 - G6 (спокойно и немного мечтательно)
-  const CHORDS = [[45, 57, 60, 64, 71], [41, 57, 60, 64, 65], [36, 55, 59, 64, 67], [43, 55, 59, 62, 64]];
-  // Мелодия на 8 тактов (по 4 доли, 0 - пауза)
-  const MELODY = [
-    [76, 0, 72, 74], [76, 0, 69, 0], [67, 69, 72, 0], [74, 0, 71, 0],
-    [72, 74, 76, 79], [77, 0, 76, 72], [74, 0, 72, 67], [69, 0, 0, 0]
-  ];
-  const BEAT = 60 / 68;                       // темп 68 ударов в минуту
-  let nextT = 0, beat = 0;
-
-  // "Пианино": несколько обертонов, верхние гаснут быстрее - звук теплый и мягкий
-  function piano(n, t, vol, len) {
-    const f = midi(n), out = ctx.createGain();
-    out.gain.setValueAtTime(0, t); out.gain.linearRampToValueAtTime(vol, t + .008); out.gain.exponentialRampToValueAtTime(.0001, t + len);
-    out.connect(music);
-    [[1, 1, 1], [2, .32, .55], [3, .12, .35], [4, .05, .22]].forEach(([h, a, l]) => {
-      const o = ctx.createOscillator(); o.type = "sine"; o.frequency.value = f * h; o.detune.value = (Math.random() - .5) * 4;
-      const g = ctx.createGain(); g.gain.setValueAtTime(a, t); g.gain.exponentialRampToValueAtTime(.0001, t + len * l);
-      o.connect(g); g.connect(out); o.start(t); o.stop(t + len + .05);
-    });
-  }
-
-  function scheduler() {
-    setInterval(() => {
-      if (!on || !ctx || ctx.state !== "running") { nextT = 0; return; }
-      if (!nextT) nextT = ctx.currentTime + .15;
-      while (nextT < ctx.currentTime + .4) {
-        const bar = Math.floor(beat / 4), b = beat % 4;
-        const chord = CHORDS[bar % 4], mel = MELODY[bar % 8][b];
-        if (b === 0) {                                   // начало такта: бас + мягкий аккорд "волной"
-          piano(chord[0], nextT, .05, 4.5);
-          chord.slice(1).forEach((n, k) => piano(n, nextT + .06 + k * .05, .018, 3.5));
-        }
-        if (b === 2) chord.slice(2, 4).forEach((n, k) => piano(n + 12, nextT + k * .04, .01, 2)); // тихие отголоски
-        if (mel) piano(mel, nextT + (Math.random() - .5) * .02, .034, 2.8);                   // мелодия
-        nextT += BEAT; beat++;
-      }
-    }, 90);
-  }
 
   function fade(to) {
     const t = ctx.currentTime;
@@ -123,15 +82,33 @@
   }
 
   // Первый клик/касание/клавиша - запускаем звук (если не выключен)
+  // Подсказка: если браузер не дал включить звук сам - "нажмите в любом месте"
+  const hint = document.createElement("span");
+  hint.className = "snd-hint"; hint.setAttribute("data-i18n", "snd_hint");
+  hint.textContent = "нажмите в любом месте - включится музыка";
+  btn.after(hint);
+  const hideHint = () => hint.classList.remove("show");
+
   const unlock = e => {
     if (e.target.closest && e.target.closest(".snd")) return;
-    start();
+    start(); hideHint();
     ["pointerdown", "keydown", "touchend"].forEach(n => removeEventListener(n, unlock, true));
   };
   ["pointerdown", "keydown", "touchend"].forEach(n => addEventListener(n, unlock, true));
 
+  // Попытка включить музыку сразу при входе (часть браузеров разрешает, если человек уже бывал на сайте)
+  if (on) {
+    try {
+      build();
+      ctx.resume().catch(() => {});
+      track.preload = "auto";
+      track.play().then(() => { if (ctx.state === "running") { fade(.9); ["pointerdown", "keydown", "touchend"].forEach(n => removeEventListener(n, unlock, true)); } }).catch(() => {});
+    } catch (e) {}
+    setTimeout(() => { if (on && (!ctx || ctx.state !== "running")) hint.classList.add("show"); }, 2600);
+  }
+
   btn.addEventListener("click", () => {
-    on = !on; label();
+    on = !on; label(); hideHint();
     try { localStorage.setItem("snd", on ? "on" : "off"); } catch (e) {}
     if (!ctx) build();
     ctx.resume();

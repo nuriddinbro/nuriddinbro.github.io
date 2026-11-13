@@ -192,7 +192,7 @@ function init() {
   });
 
   // Где кристалл на экране (напротив панели) и как стоит камера
-  const side = [1.35, -1, 1, -1, 1, -1];
+  const side = [1, -1, 1, -1, 1, -1];
   const camA = [0, .38, -.32, .28, -.36, .1];
   const camE = [.06, .2, -.06, .36, .1, .04];
   const camR = [8.2, 7.6, 7.8, 8.2, 7.4, 8];
@@ -298,10 +298,11 @@ function init() {
   // ---------- Мышь и клик ----------
   const mouse = { x: 0, y: 0, tx: 0, ty: 0 };
   const ray = new THREE.Raycaster(), ndc = new THREE.Vector2(9, 9), plane = new THREE.Plane(), hitP = new THREE.Vector3(), wp = new THREE.Vector3();
-  let hover = false, hoverAmt = 0, ex = 0, exV = 0;
+  let hover = false, hoverAmt = 0, ex = 0, exV = 0, lastMove = 0;
   addEventListener("pointermove", e => {
     ndc.set(e.clientX / innerWidth * 2 - 1, -(e.clientY / innerHeight) * 2 + 1);
     mouse.tx = e.clientX / innerWidth - .5; mouse.ty = e.clientY / innerHeight - .5;
+    lastMove = performance.now();
   }, { passive: true });
   const overUI = el => el && el.closest && el.closest("a, button, .panel, .hud, .intro > *, input");
   const hitCrystal = () => { ray.setFromCamera(ndc, camera); crystal.getWorldPosition(wp); return ray.ray.distanceToPoint(wp) < 1.75 * crystal.scale.x; };
@@ -315,7 +316,7 @@ function init() {
 
   // ---------- Цикл ----------
   const clock = new THREE.Clock();
-  let prog = progress(), intro = 0, wind = 0, lastProg = prog, trI = 0, lowered = false, frames = 0, ftime = 0, progV = 0, rotY = 0;
+  let prog = progress(), intro = 0, wind = 0, lastProg = prog, trI = 0, lowered = false, frames = 0, ftime = 0, progV = 0, rotY = 0, windSign = 1;
   const trAge = new Array(8).fill(99);
   const sm = x => x * x * x * (x * (x * 6 - 15) + 10); // очень плавная кривая (без рывков в начале и в конце)
   const invQ = new THREE.Quaternion(), wdir = new THREE.Vector3();
@@ -327,6 +328,7 @@ function init() {
     intro = dbgAt ? 1 : Math.min(1, intro + dt * .4);
     if (dbgAt) prog = +dbg.get("at"); else { const tg = progress(); progV += ((tg - prog) * 10 - progV * 6.3) * dt; prog += progV * dt; if (Math.abs(tg - prog) < .0005 && Math.abs(progV) < .001) { prog = tg; progV = 0; } }
     mouse.x += (mouse.tx - mouse.x) * .05; mouse.y += (mouse.ty - mouse.y) * .05;
+    const wideNow = camera.aspect > 1.1;
 
     // какая пара форм и насколько перетекла
     const i = Math.min(Math.floor(prog), forms.length - 2), f = sm(Math.min(1, prog - i));
@@ -338,12 +340,13 @@ function init() {
 
     // ветер от скорости прокрутки: песок срывается шлейфом
     const vel = dt > 0 ? (prog - lastProg) / dt : 0; lastProg = prog;
-    wind += (Math.min(.9, Math.abs(vel) * 1.2) - wind) * Math.min(1, dt * (Math.abs(vel) > .02 ? 2.2 : 1.1));
+    wind += (Math.min(.45, Math.abs(vel) * .6) - wind) * Math.min(1, dt * .9);
     U.uWind.value = reduce ? 0 : wind;
     const sideNow = side[i] + (side[i + 1] - side[i]) * f;
-    wdir.set(-sideNow * .55, vel >= 0 ? 1 : -1, .25).normalize();
+    windSign += ((vel >= 0 ? 1 : -1) - windSign) * Math.min(1, dt * 1.2);
+    wdir.set(-sideNow * .55, windSign, .25).normalize();
     invQ.copy(crystal.quaternion).invert(); wdir.applyQuaternion(invQ);
-    U.uWindDir.value.copy(wdir);
+    U.uWindDir.value.lerp(wdir, Math.min(1, dt * 2)).normalize();
 
     // клик: упругая "пружина" возвращает песок на место
     exV += (-ex * 18 - exV * 8) * dt; ex = Math.max(0, ex + exV * dt);
@@ -352,7 +355,7 @@ function init() {
     // курсор над кристаллом: песчинки расступаются вокруг точки курсора
     const h = hitCrystal();
     if (h !== hover) { hover = h; document.dispatchEvent(new CustomEvent("crystalhover", { detail: h })); }
-    hoverAmt += ((hover ? 1 : 0) - hoverAmt) * Math.min(1, dt * 2.5);
+    hoverAmt += ((hover && performance.now() - lastMove < 600 ? 1 : 0) - hoverAmt) * Math.min(1, dt * 2);
     U.uHover.value = hoverAmt;
     // след курсора по шару: новые точки, старые плавно "гаснут"
     const tr = U.uTrail.value;
@@ -364,12 +367,15 @@ function init() {
       const loc = crystal.worldToLocal(hitP.clone());
       U.uMouse.value.copy(loc);
       const lastT = tr[trI];
-      if (hover && Math.hypot(loc.x - lastT.x, loc.y - lastT.y, loc.z - lastT.z) > .16) { trI = (trI + 1) % 8; tr[trI].set(loc.x, loc.y, loc.z, 0); trAge[trI] = 0; }
+      const moved = performance.now() - lastMove < 120;
+      if (hover && moved && Math.hypot(loc.x - lastT.x, loc.y - lastT.y, loc.z - lastT.z) > .16) { trI = (trI + 1) % 8; tr[trI].set(loc.x, loc.y, loc.z, 0); trAge[trI] = 0; }
     }
 
     // положение и вращение
     const e = U.uIntro.value;
-    crystal.scale.setScalar(.75 + .25 * e);
+    // в шапке - крупно, в разделах с панелями - чуть меньше, чтобы был ровный отступ от текста
+    const inHero = 1 - Math.min(1, prog);
+    crystal.scale.setScalar((.75 + .25 * e) * (wideNow ? .8 + .2 * inHero : 1));
     // фигура смотрит на зрителя (на камеру) и лишь мягко покачивается; при перетекании делает пол-оборота
     const camAz = camA[i] + (camA[i + 1] - camA[i]) * f;
     const rotTarget = camAz + (reduce ? 0 : Math.sin(t * .25) * .32) + Math.sin(f * Math.PI) * .7 + mouse.x * .35;
@@ -377,7 +383,8 @@ function init() {
     crystal.rotation.y = rotY;
     crystal.rotation.x = mouse.y * .18;
     const wide = camera.aspect > 1.1;
-    crystal.position.x = wide ? sideNow * Math.min(2.4, camera.aspect * 1.25) : 0;
+    const viewW = 2 * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) * camera.position.length() * camera.aspect;
+    crystal.position.x = wide ? sideNow * Math.min(viewW * .25, 3.6) : 0;
     crystal.position.y = wide ? 0 : 1.1;
     rings.forEach((r, k) => { r.rotation.z += dt * (.05 + k * .03) * (k % 2 ? -1 : 1); });
 
@@ -385,7 +392,7 @@ function init() {
     const L = arr => arr[i] + (arr[i + 1] - arr[i]) * f;
     const a = L(camA) + mouse.x * .12, el = L(camE) - mouse.y * .08, r = L(camR) + (1 - e) * 4;
     camera.position.set(Math.sin(a) * Math.cos(el) * r, Math.sin(el) * r, Math.cos(a) * Math.cos(el) * r);
-    camera.lookAt(crystal.position.x * .35, crystal.position.y * .5, 0);
+    camera.lookAt(0, crystal.position.y * .5, 0); // камера смотрит прямо - фигура стоит в своей половине экрана, не у текста
 
     // фон
     if (!reduce) {
