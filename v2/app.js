@@ -29,7 +29,7 @@ function init() {
 
   const scene = new THREE.Scene();
   scene.background = FOG.clone();
-  scene.fog = new THREE.FogExp2(FOG, .05);
+  scene.fog = new THREE.FogExp2(FOG, .03);
   const pmrem = new THREE.PMREMGenerator(renderer);
   scene.environment = pmrem.fromScene(new RoomEnvironment(renderer), .04).texture;
 
@@ -37,41 +37,88 @@ function init() {
 
   // Свет: мягкий рассеянный + ключевой сверху-справа (дает объем песчинкам)
   scene.add(new THREE.HemisphereLight("#ffffff", "#9fb0bf", 1.1));
-  const key = new THREE.DirectionalLight("#ffffff", 2.4); key.position.set(4, 6, 5); scene.add(key);
+  const key = new THREE.DirectionalLight("#ffffff", 3.2); key.position.set(4, 6, 5); scene.add(key);
   const rim = new THREE.DirectionalLight("#b8e2f2", 1.0); rim.position.set(-6, -2, -4); scene.add(rim);
 
   const rnd = (a, b) => a + Math.random() * (b - a);
   const N = isMobile ? 5200 : 14000;
+  let curI = -1;
 
   // ---------- Формы из песка: у каждой песчинки своя точка в каждой форме ----------
+  // шапка - шар, опыт - силуэт, портфолио - щит с галочкой, навыки - гарнитура, языки - Сатурн, контакты - конверт
   function make(gen) { const a = new Float32Array(N * 3); for (let i = 0; i < N; i++) a.set(gen(i), i * 3); return a; }
-  // кристалл: поверхность икосаэдра со "слоем" песка внутрь
-  const ico = new THREE.IcosahedronGeometry(1.55, 0).toNonIndexed().attributes.position;
-  const faces = ico.count / 3;
-  const va = new THREE.Vector3(), vb = new THREE.Vector3(), vc = new THREE.Vector3(), tmp = new THREE.Vector3();
-  function crystalPt() {
-    const f = (Math.random() * faces | 0) * 3;
-    va.fromBufferAttribute(ico, f); vb.fromBufferAttribute(ico, f + 1); vc.fromBufferAttribute(ico, f + 2);
-    let u = Math.random(), v = Math.random(); if (u + v > 1) { u = 1 - u; v = 1 - v; }
-    tmp.copy(va).addScaledVector(vb.sub(va), u).addScaledVector(vc.sub(va), v);
-    const depth = Math.pow(Math.random(), 2.2) * .35; // большинство песчинок у поверхности
-    tmp.multiplyScalar(1 - depth / 1.55);
-    return [tmp.x, tmp.y * 1.15, tmp.z];
+  const shellIn = (x, y, z, k) => { const d = Math.pow(Math.random(), 2.2) * k, l = Math.hypot(x, y, z) || 1; return [x * (1 - d / l), y * (1 - d / l), z * (1 - d / l)]; };
+  const ball = (R, k) => { const u = rnd(-1, 1), a = rnd(0, 6.283), s = Math.sqrt(1 - u * u); return shellIn(R * s * Math.cos(a), R * u, R * s * Math.sin(a), k); };
+  const jit = (p, r) => [p[0] + rnd(-r, r), p[1] + rnd(-r, r), p[2] + rnd(-r, r)];
+  function polyline(pts) { // случайная точка на ломаной
+    const lens = []; let tot = 0;
+    for (let i = 0; i < pts.length - 1; i++) { const l = Math.hypot(pts[i + 1][0] - pts[i][0], pts[i + 1][1] - pts[i][1]); lens.push(l); tot += l; }
+    return () => { let r = Math.random() * tot, i = 0; while (r > lens[i] && i < lens.length - 1) { r -= lens[i]; i++; } const t = r / lens[i];
+      return [pts[i][0] + (pts[i + 1][0] - pts[i][0]) * t, pts[i][1] + (pts[i + 1][1] - pts[i][1]) * t, (pts[i][2] || 0) + ((pts[i + 1][2] || 0) - (pts[i][2] || 0)) * t]; };
   }
-  const shell = (x, y, z, k) => { const d = Math.pow(Math.random(), 2.2) * k; const l = Math.hypot(x, y, z) || 1; return [x * (1 - d / l), y * (1 - d / l), z * (1 - d / l)]; };
-  const forms = [
-    make(crystalPt),
-    make(() => { const a = rnd(0, 6.283), b = rnd(0, 6.283), r = .38 * Math.sqrt(Math.random() * .4 + .6); return [(1.75 + r * Math.cos(b)) * Math.cos(a), r * Math.sin(b), (1.75 + r * Math.cos(b)) * Math.sin(a)]; }),                         // кольцо (тор)
-    make(i => { const s = i % 2 ? Math.PI : 0, y = rnd(-1.9, 1.9), a = y * 2.2 + s, b = rnd(0, 6.283), r = .26 * Math.sqrt(Math.random()); return [Math.cos(a) * .95 + Math.cos(b) * r, y, Math.sin(a) * .95 + Math.sin(b) * r]; }),           // двойная спираль
-    make(() => { const ax = Math.random() * 3 | 0, sg = Math.random() < .5 ? -1 : 1, p = [rnd(-1.15, 1.15), rnd(-1.15, 1.15), rnd(-1.15, 1.15)]; p[ax] = 1.15 * sg; return shell(p[0], p[1], p[2], .3); }),                          // куб
-    make(i => { if (i % 3 === 0) { const a = rnd(0, 6.283), r = Math.sqrt(rnd(2.05 * 2.05, 2.7 * 2.7)); return [Math.cos(a) * r, rnd(-.03, .03), Math.sin(a) * r * .98]; }
-      const u = rnd(-1, 1), a = rnd(0, 6.283), s = Math.sqrt(1 - u * u); return shell(1.4 * s * Math.cos(a), 1.4 * u, 1.4 * s * Math.sin(a), .3); }),                                                                              // планета с кольцом
-    null
-  ];
-  forms[5] = forms[0];
+  // шар
+  const fSphere = make(() => ball(1.55, .32));
+  // щит с галочкой: заполненный щит + объемная галочка поверх
+  const shW = y => y > .55 ? 1.35 - (y - .55) * .22 : 1.35 * Math.sqrt(Math.max(0, (y + 1.85) / 2.4));
+  const check = polyline([[-.7, .05, .22], [-.15, -.55, .22], [.85, .75, .22]]);
+  const fShield = make(() => {
+    if (Math.random() < .3) return jit(check(), .1);
+    let x, y; do { y = rnd(-1.85, 1.75); x = rnd(-1.4, 1.4); } while (Math.abs(x) > shW(y));
+    const edge = 1 - Math.abs(x) / Math.max(.01, shW(y));
+    return [x, y, rnd(-.12, .12) + Math.sqrt(Math.max(0, edge)) * .12];
+  });
+  // гарнитура: дуга + две чашки + микрофон
+  const mic = polyline([[-1.5, -.55, .25], [-1.15, -1.2, .45], [-.45, -1.5, .5]]);
+  const fHeadset = make(() => {
+    const r = Math.random();
+    if (r < .38) { const a = rnd(0, Math.PI), b = rnd(0, 6.283), t = .16 * Math.sqrt(Math.random()); return [Math.cos(a) * (1.5 + Math.cos(b) * t), Math.sin(a) * 1.45 + .05 + Math.sin(b) * t, Math.cos(b) * t * .8]; }
+    if (r < .86) { const sd = Math.random() < .5 ? -1 : 1, a = rnd(0, 6.283), rr = .55 * Math.sqrt(Math.random()); return [sd * (1.5 + rnd(-.22, .22)), -.15 + Math.sin(a) * rr, Math.cos(a) * rr]; }
+    if (r < .97) return jit(mic(), .06);
+    return jit([-.45, -1.5, .5], .15);
+  });
+  // Сатурн: шар + плоское кольцо
+  const fSaturn = make(i => {
+    if (i % 3 === 0) { const a = rnd(0, 6.283), r = Math.sqrt(rnd(1.75 * 1.75, 2.55 * 2.55)); return [Math.cos(a) * r, rnd(-.035, .035), Math.sin(a) * r]; }
+    return ball(1.25, .28);
+  });
+  // конверт: плотная рамка + клапан (V) + нижние линии, все объемное
+  const ew = 1.75, eh = 1.15;
+  const frame = polyline([[-ew, eh], [ew, eh], [ew, -eh], [-ew, -eh], [-ew, eh]]);
+  const flap = polyline([[-ew, eh, .1], [0, -.15, .2], [ew, eh, .1]]);
+  const low1 = polyline([[-ew, -eh], [-.45, .2]]), low2 = polyline([[ew, -eh], [.45, .2]]);
+  const fEnvelope = make(() => {
+    const r = Math.random();
+    if (r < .38) return jit(frame(), .08);
+    if (r < .68) return jit(flap(), .08);
+    if (r < .8) return jit(Math.random() < .5 ? low1() : low2(), .06);
+    return [rnd(-ew, ew), rnd(-eh, eh), rnd(-.06, .06)];
+  });
+  const forms = [fSphere, fSphere, fShield, fHeadset, fSaturn, fEnvelope];
+  // силуэт (из фото без фона) подставляется, когда картинка загрузится
+  (async () => {
+    try {
+      const img = new Image(); img.src = new URL("../sil.png", import.meta.url).href; await img.decode();
+      const W = 110, H = Math.round(W * img.height / img.width);
+      const c = document.createElement("canvas"); c.width = W; c.height = H;
+      const g = c.getContext("2d"); g.drawImage(img, 0, 0, W, H);
+      const d = g.getImageData(0, 0, W, H).data, cells = [];
+      for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) if (d[(y * W + x) * 4 + 3] > 140) cells.push([x, y]);
+      if (!cells.length) return;
+      let x0 = 1e9, x1 = -1e9, y0 = 1e9, y1 = -1e9;
+      cells.forEach(([x, y]) => { x0 = Math.min(x0, x); x1 = Math.max(x1, x); y0 = Math.min(y0, y); y1 = Math.max(y1, y); });
+      const sc = 3.9 / (y1 - y0), cx = (x0 + x1) / 2, cy = (y0 + y1) / 2;
+      forms[1] = make(() => {
+        const [x, y] = cells[(Math.random() * cells.length) | 0];
+        const px = (x + Math.random() - cx) * sc, py = -(y + Math.random() - cy) * sc;
+        const bulge = Math.sqrt(Math.max(0, 1 - (px / 1.25) ** 2)) * .42;
+        return [px, py, rnd(-bulge, bulge)];
+      });
+      curI = -1; // перезаписать текущие формы
+    } catch (e) {}
+  })();
 
   // ---------- Песчинки: InstancedMesh + шейдер, который двигает их на видеокарте ----------
-  const grainGeo = new THREE.IcosahedronGeometry(.032, 0);
+  const grainGeo = new THREE.IcosahedronGeometry(.038, 0);
   const geo = new THREE.InstancedBufferGeometry().copy(grainGeo);
   geo.instanceCount = N;
   const aA = new THREE.InstancedBufferAttribute(forms[0].slice(), 3);
@@ -88,7 +135,7 @@ function init() {
     uWind: { value: 0 }, uWindDir: { value: new THREE.Vector3(0, 1, 0) },
     uEx: { value: 0 }, uMouse: { value: new THREE.Vector3(99, 99, 99) }, uHover: { value: 0 }
   };
-  const mat = new THREE.MeshStandardMaterial({ color: "#f2f6f8", roughness: .82, metalness: 0, envMapIntensity: .6 });
+  const mat = new THREE.MeshStandardMaterial({ color: "#a9bccb", roughness: .78, metalness: 0, envMapIntensity: .45 });
   mat.onBeforeCompile = sh => {
     Object.assign(sh.uniforms, U);
     sh.vertexShader = `
@@ -100,7 +147,7 @@ function init() {
       vec3 p = mix(aA, aB, m);
       float bump = 4.0 * m * (1.0 - m);
       vec3 n3 = vec3(sin(uTime * .7 + aSeed * 31.0), cos(uTime * .6 + aSeed * 17.0), sin(uTime * .5 + aSeed * 11.0));
-      p += n3 * (0.004 + bump * 0.32 * aSeed);
+      p += n3 * (0.002 + bump * (0.35 + aSeed * .9)) + normalize(p + vec3(.0001)) * bump * (.35 + aSeed * .6);
       // ветер: легкие песчинки срываются и тянутся шлейфом
       float w = uWind * smoothstep(.3, 1.0, aSeed);
       p += uWindDir * w * (0.5 + aSeed * 1.8) + n3 * w * .3;
@@ -118,7 +165,7 @@ function init() {
     sh.fragmentShader = `varying float vShade; varying float vTint;
     ` + sh.fragmentShader.replace("#include <color_fragment>", `
       #include <color_fragment>
-      diffuseColor.rgb *= mix(.8, 1.0, smoothstep(.55, 1.0, vShade));      // внутри "тень", снаружи светлее
+      diffuseColor.rgb *= mix(.72, 1.0, smoothstep(.55, 1.0, vShade));      // внутри "тень", снаружи светлее
       diffuseColor.rgb = mix(diffuseColor.rgb, diffuseColor.rgb * vec3(.86, .93, 1.0), step(.7, vTint)); // часть песчинок с голубым оттенком
     `);
   };
@@ -249,7 +296,7 @@ function init() {
 
   // ---------- Цикл ----------
   const clock = new THREE.Clock();
-  let prog = progress(), intro = 0, curI = -1, wind = 0, lastProg = prog;
+  let prog = progress(), intro = 0, wind = 0, lastProg = prog;
   const sm = x => x * x * (3 - 2 * x);
   const invQ = new THREE.Quaternion(), wdir = new THREE.Vector3();
   const dbg = new URLSearchParams(location.search);
@@ -293,7 +340,9 @@ function init() {
     // положение и вращение
     const e = U.uIntro.value;
     crystal.scale.setScalar(.75 + .25 * e);
-    crystal.rotation.y = (reduce ? 0 : t * .1) + prog * .9 + mouse.x * .35;
+    // фигура смотрит на зрителя (на камеру) и лишь мягко покачивается; при перетекании делает пол-оборота
+    const camAz = camA[i] + (camA[i + 1] - camA[i]) * f;
+    crystal.rotation.y = camAz + (reduce ? 0 : Math.sin(t * .25) * .32) + Math.sin(f * Math.PI) * 1.2 + mouse.x * .35;
     crystal.rotation.x = mouse.y * .18;
     const wide = camera.aspect > 1.1;
     crystal.position.x = wide ? sideNow * Math.min(2.4, camera.aspect * 1.25) : 0;
