@@ -21,6 +21,7 @@ const EN = {
   ch4_t: "Languages", ch4_s: "I speak with customers in their language",
   ch5_t: "Contact", ch5_s: "The next step is yours",
   hud_scroll: "scroll",
+  music_by: "Music",
   hero_hint: "scroll down - I will show you what I can do",
   cv: "Download CV · PDF",
   stat_years: "years in customer service",

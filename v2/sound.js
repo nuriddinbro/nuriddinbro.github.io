@@ -16,7 +16,9 @@
   const label = () => { btn.setAttribute("aria-pressed", String(on)); btn.querySelector("span").textContent = on ? "SOUND ON" : "SOUND OFF"; };
   label();
 
-  let ctx, master, wet, music;
+  let ctx, master, wet, music, track;
+  const TRACK_URL = new URL("snowfall.mp3", document.currentScript.src).href;
+  const MUSIC_VOL = .16; // тихо: примерно 16% громкости
 
   function build() {
     ctx = new AC();
@@ -28,16 +30,12 @@
     d1.connect(lp); lp.connect(fb); fb.connect(d1); lp.connect(master);
     wet = d1;
 
-    // Фоновая музыка: "эмбиент-пианино" в просторном зале (свое синтезированное эхо, без файлов)
+    // Фоновая музыка: трек "Snowfall" - Scott Buckley (CC BY 4.0). Играет тихо, по кругу.
     music = ctx.createGain(); music.gain.value = 0;
-    const hall = ctx.createConvolver();
-    const irLen = ctx.sampleRate * 3.2, ir = ctx.createBuffer(2, irLen, ctx.sampleRate);
-    for (let c = 0; c < 2; c++) { const d = ir.getChannelData(c); for (let i = 0; i < irLen; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / irLen, 3.2); }
-    hall.buffer = ir;
-    const hallGain = ctx.createGain(); hallGain.gain.value = .55;
-    const warm = ctx.createBiquadFilter(); warm.type = "lowpass"; warm.frequency.value = 2600;
-    music.connect(warm); warm.connect(master); warm.connect(hall); hall.connect(hallGain); hallGain.connect(master);
-    scheduler();
+    music.connect(master);
+    track = new Audio(TRACK_URL);
+    track.loop = true; track.preload = "none"; track.crossOrigin = "anonymous";
+    ctx.createMediaElementSource(track).connect(music);
   }
 
   // Ноты в формате MIDI (60 = до первой октавы)
@@ -87,10 +85,12 @@
     master.gain.cancelScheduledValues(t);
     master.gain.setValueAtTime(master.gain.value, t);
     master.gain.linearRampToValueAtTime(to, t + 1.5);
-    // мелодия нарастает очень плавно (4 секунды), чтобы не напугать
+    // музыка нарастает очень плавно (6 секунд), чтобы никого не напугать
     music.gain.cancelScheduledValues(t);
     music.gain.setValueAtTime(music.gain.value, t);
-    music.gain.linearRampToValueAtTime(to ? .55 : 0, t + (to ? 4 : 1));
+    music.gain.linearRampToValueAtTime(to ? MUSIC_VOL : 0, t + (to ? 6 : 1.2));
+    if (to) { track.play().catch(() => {}); }
+    else setTimeout(() => { if (!on) track.pause(); }, 1300);
   }
 
   function start() {

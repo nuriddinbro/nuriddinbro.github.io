@@ -195,6 +195,8 @@ main { position: relative; z-index: 1; }
 .contacts a:hover span { transform: translateX(4px); }
 .foot { margin-top: 18px; font: 500 11px var(--mono); letter-spacing: .1em; color: var(--muted); }
 .foot b { color: var(--ink); }
+.credit { margin-top: 6px; font: 500 10px var(--mono); letter-spacing: .06em; color: var(--muted); }
+.credit a { color: var(--ink-2); }
 
 /* Появление панелей */
 .panel, .intro > * { opacity: 0; transform: translateY(26px); transition: opacity 1s ease, transform 1s cubic-bezier(.2,.8,.2,1); }
