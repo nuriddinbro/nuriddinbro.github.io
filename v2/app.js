@@ -16,7 +16,7 @@ try {
 if (renderer) init();
 
 function init() {
-  let dpr = Math.min(devicePixelRatio || 1, isMobile ? 1.2 : 1.4);
+  let dpr = Math.min(devicePixelRatio || 1, isMobile ? 1 : 1.4);
   renderer.setPixelRatio(dpr);
   renderer.setSize(innerWidth, innerHeight);
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -38,7 +38,7 @@ function init() {
   const rim = new THREE.DirectionalLight("#b8e2f2", 1.0); rim.position.set(-6, -2, -4); scene.add(rim);
 
   const rnd = (a, b) => a + Math.random() * (b - a);
-  const N = isMobile ? 4500 : 12000;
+  const N = isMobile ? 2400 : 12000;
 
   // ---------- Формы из песка: у каждой песчинки своя точка в каждой форме ----------
   // шапка - шар, опыт - силуэт, портфолио - щит с галочкой, навыки - гарнитура, языки - Сатурн, контакты - конверт
@@ -131,15 +131,16 @@ function init() {
     uWind: { value: 0 }, uWindDir: { value: new THREE.Vector3(0, 1, 0) },
     uEx: { value: 0 }, uMouse: { value: new THREE.Vector3(99, 99, 99) }, uHover: { value: 0 },
     uW: { value: [1, 0, 0, 0, 0, 0] }, uView: { value: new THREE.Vector3(0, 0, -1) },
-    uTrail: { value: Array.from({ length: 12 }, () => new THREE.Vector4(99, 99, 99, 99)) }
+    uTrail: { value: Array.from({ length: 16 }, () => new THREE.Vector4(99, 99, 99, 99)) }
   };
-  const mat = new THREE.MeshStandardMaterial({ color: "#a9bccb", roughness: .78, metalness: 0, envMapIntensity: .45 });
+  // на телефоне - упрощенный свет (MeshLambert), на компьютере - полноценный
+  const mat = isMobile ? new THREE.MeshLambertMaterial({ color: "#c6d3dd" }) : new THREE.MeshStandardMaterial({ color: "#a9bccb", roughness: .78, metalness: 0, envMapIntensity: .45 });
   mat.onBeforeCompile = sh => {
     Object.assign(sh.uniforms, U);
     sh.vertexShader = `
       attribute vec3 aF0; attribute vec3 aF1; attribute vec3 aF2; attribute vec3 aF3; attribute vec3 aF4; attribute vec3 aF5;
       attribute float aSeed; attribute vec3 aDir; attribute float aTint;
-      uniform float uW[6]; uniform vec4 uTrail[12]; uniform vec3 uView;
+      uniform float uW[6]; uniform vec4 uTrail[16]; uniform vec3 uView;
       uniform float uTime, uMix, uIntro, uWind, uEx, uHover; uniform vec3 uWindDir, uMouse;
       varying float vShade; varying float vTint;
     ` + sh.vertexShader.replace("#include <begin_vertex>", `
@@ -159,14 +160,14 @@ function init() {
       vec3 dm = p - uMouse; dm -= dot(dm, uView) * uView; float dd = length(dm);
       p += normalize(dm + vec3(.0001)) * pow(smoothstep(.75, .0, dd), 2.0) * .1 * uHover;
       // след курсора: песчинки вдоль пути разлетаются и плавно оседают
-      for (int k = 0; k < 12; k++) {
+      for (int k = 0; k < 16; k++) {
         vec4 tp = uTrail[k];
         float age = tp.w - aSeed * .06;                                   // почти без задержки
-        float rise = 1.0 - pow(1.0 - clamp(age / .32, 0.0, 1.0), 3.0);    // сразу реагирует, мягко тормозит
-        float env = rise * (1.0 - smoothstep(.45, 2.6, age));
+        float rise = 1.0 - pow(1.0 - clamp(age / .5, 0.0, 1.0), 3.0);     // сразу реагирует, мягко тормозит
+        float env = rise * (1.0 - smoothstep(.6, 2.9, age));
         vec3 dv = p - tp.xyz; dv -= dot(dv, uView) * uView; float dk = length(dv);
-        float kk = env * pow(smoothstep(.85, .0, dk), 2.0);
-        p += normalize(dv + vec3(.0001)) * kk * .24 + n3 * kk * .1 - uView * kk * .16;
+        float kk = env * pow(smoothstep(.95, .0, dk), 2.5);
+        p += normalize(dv + vec3(.0001)) * kk * .17 - uView * kk * .12;
       }
       // появление: песок слетается из облака
       p = mix(aDir * (4.0 + aSeed * 5.0), p, uIntro);
@@ -208,7 +209,7 @@ function init() {
     g.fillStyle = gr; g.fillRect(0, 0, 64, 64);
     return new THREE.CanvasTexture(c);
   })();
-  const SN = isMobile ? 500 : 1400;
+  const SN = isMobile ? 160 : 1400;
   const snowP = new Float32Array(SN * 3), snowS = new Float32Array(SN);
   for (let i = 0; i < SN; i++) { snowP.set([rnd(-14, 14), rnd(-8, 8), rnd(-14, 6)], i * 3); snowS[i] = rnd(.2, 1); }
   const snowGeo = new THREE.BufferGeometry(); snowGeo.setAttribute("position", new THREE.BufferAttribute(snowP, 3));
@@ -218,7 +219,7 @@ function init() {
   const farGroup = new THREE.Group(); scene.add(farGroup);
   const farMat = new THREE.MeshStandardMaterial({ color: "#f4f7f9", roughness: .5, metalness: 0, flatShading: true, envMapIntensity: .8 });
   const farEdge = new THREE.LineBasicMaterial({ color: "#ffffff", transparent: true, opacity: .4, fog: true });
-  const FAR = isMobile ? 10 : 22, far = [];
+  const FAR = isMobile ? 5 : 22, far = [];
   for (let k = 0; k < FAR; k++) {
     const g = Math.random() < .5 ? new THREE.OctahedronGeometry(rnd(.25, .8)) : new THREE.IcosahedronGeometry(rnd(.25, .7), 0);
     g.scale(1, rnd(1.2, 2.2), 1);
@@ -258,7 +259,7 @@ function init() {
         float edge = smoothstep(0.0, .25, vUv.x) * smoothstep(1.0, .75, vUv.x) * smoothstep(0.0, .3, vUv.y) * smoothstep(1.0, .6, vUv.y);
         gl_FragColor = vec4(vec3(1.0), c * edge * uOp);
       }`
-  });  const clouds = [[-9, .55, 1.3], [-15, .45, 7.7], [-4.5, .28, 3.1]].map(([z, op, sd]) => {
+  });  const clouds = (isMobile ? [[-9, .55, 1.3]] : [[-9, .55, 1.3], [-15, .45, 7.7], [-4.5, .28, 3.1]]).map(([z, op, sd]) => {
     const m = new THREE.Mesh(new THREE.PlaneGeometry(46, 16), cloudMat(sd, op));
     m.position.set(0, -2.5 + sd * .3, z); scene.add(m); return m;
   });
@@ -270,7 +271,7 @@ function init() {
       void main(){ float a = smoothstep(0.0, .5, vUv.x) * smoothstep(1.0, .5, vUv.x) * pow(vUv.y, 1.6);
         a *= .5 + .5 * sin(uTime * .35 + vUv.x * 3.0); gl_FragColor = vec4(1.0, 1.0, 1.0, a * .16); }`
   });
-  [[-3, 1.4, .18], [1.5, 2.4, -.12], [5, 1.8, .22], [8, 2.8, -.05]].forEach(([x, w, rot]) => {
+  (isMobile ? [] : [[-3, 1.4, .18], [1.5, 2.4, -.12], [5, 1.8, .22], [8, 2.8, -.05]]).forEach(([x, w, rot]) => {
     const m = new THREE.Mesh(new THREE.PlaneGeometry(w, 18), rayMat);
     m.position.set(x, 4, -10); m.rotation.z = rot + .35; scene.add(m);
   });
@@ -320,7 +321,7 @@ function init() {
   // ---------- Цикл ----------
   const clock = new THREE.Clock();
   let prog = progress(), intro = 0, wind = 0, lastProg = prog, trI = 0, lowered = false, frames = 0, ftime = 0, progV = 0, rotY = 0, windSign = 1;
-  const trAge = new Array(12).fill(99);
+  const trAge = new Array(16).fill(99);
   const sm = x => x * x * x * (x * (x * 6 - 15) + 10); // очень плавная кривая (без рывков в начале и в конце)
   const invQ = new THREE.Quaternion(), wdir = new THREE.Vector3();
   const dbg = new URLSearchParams(location.search);
@@ -362,7 +363,7 @@ function init() {
     U.uHover.value = hoverAmt;
     // след курсора по шару: новые точки, старые плавно "гаснут"
     const tr = U.uTrail.value;
-    for (let k = 0; k < 12; k++) { trAge[k] = Math.min(99, trAge[k] + dt); tr[k].w = trAge[k]; }
+    for (let k = 0; k < 16; k++) { trAge[k] = Math.min(99, trAge[k] + dt); tr[k].w = trAge[k]; }
     crystal.getWorldPosition(wp);
     plane.setFromNormalAndCoplanarPoint(camera.getWorldDirection(hitP).negate(), wp);
     { const vd = camera.getWorldDirection(new THREE.Vector3()); invQ.copy(crystal.quaternion).invert(); U.uView.value.copy(vd.applyQuaternion(invQ)).normalize(); }
@@ -371,14 +372,14 @@ function init() {
       U.uMouse.value.lerp(loc, Math.min(1, dt * 9));
       const lastT = tr[trI];
       const moved = performance.now() - lastMove < 120;
-      if (hover && moved && Math.hypot(loc.x - lastT.x, loc.y - lastT.y, loc.z - lastT.z) > .1) { trI = (trI + 1) % 12; tr[trI].set(loc.x, loc.y, loc.z, 0); trAge[trI] = 0; }
+      if (hover && moved && Math.hypot(loc.x - lastT.x, loc.y - lastT.y, loc.z - lastT.z) > .065) { trI = (trI + 1) % 16; tr[trI].set(loc.x, loc.y, loc.z, 0); trAge[trI] = 0; }
     }
 
     // положение и вращение
     const e = U.uIntro.value;
     // в шапке - крупно, в разделах с панелями - чуть меньше, чтобы был ровный отступ от текста
     const inHero = 1 - Math.min(1, prog);
-    crystal.scale.setScalar((.75 + .25 * e) * (wideNow ? .8 + .2 * inHero : 1));
+    crystal.scale.setScalar((.75 + .25 * e) * (wideNow ? .8 + .2 * inHero : .6));
     // фигура смотрит на зрителя (на камеру) и лишь мягко покачивается; при перетекании делает пол-оборота
     const camAz = camA[i] + (camA[i + 1] - camA[i]) * f;
     const rotTarget = camAz + (reduce ? 0 : Math.sin(t * .25) * .32) + Math.sin(f * Math.PI) * .7 + mouse.x * .35;
@@ -388,7 +389,7 @@ function init() {
     const wide = camera.aspect > 1.1;
     const viewW = 2 * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) * camera.position.length() * camera.aspect;
     crystal.position.x = wide ? sideNow * Math.min(viewW * .25, 3.6) : 0;
-    crystal.position.y = wide ? 0 : 1.1;
+    crystal.position.y = wide ? 0 : 1.75; // на телефоне - выше, над текстом
     rings.forEach((r, k) => { r.rotation.z += dt * (.05 + k * .03) * (k % 2 ? -1 : 1); });
 
     // камера

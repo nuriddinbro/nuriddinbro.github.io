@@ -20,7 +20,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Onest:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="v2/style.css?v=13">
+<link rel="stylesheet" href="v2/style.css?v=14">
 </head>
 <body>
 
@@ -42,10 +42,10 @@
     <button type="button" data-set-lang="en" aria-pressed="false">EN</button>
   </div>
 </header>
-<div class="hud hud-bottom" aria-hidden="true">
+<div class="hud hud-bottom">
   <span class="counter"><b id="secNum">01</b> / 06</span>
   <span class="rail"><i id="rail"></i></span>
-  <span class="scroll-tip" data-i18n="hud_scroll">листайте</span>
+  <span class="jump"><button type="button" class="jump-btn" data-jump="top" aria-label="Наверх">↑ <span data-i18n="jump_up">Наверх</span></button><button type="button" class="jump-btn" data-jump="bottom" aria-label="Вниз"><span data-i18n="jump_down">Вниз</span> ↓</button></span>
 </div>
 
 <main>
@@ -183,11 +183,11 @@
 </main>
 
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}</script>
-<script src="script.js?v=43"></script>
-<script src="v2/ui.js?v=2"></script>
+<script src="script.js?v=44"></script>
+<script src="v2/ui.js?v=3"></script>
 <script src="v2/sound.js?v=7"></script>
 <script src="v2/cursor.js?v=3"></script>
-<script src="v2/title-sand.js?v=3"></script>
-<script type="module" src="v2/app.js?v=19"></script>
+<script src="v2/title-sand.js?v=4"></script>
+<script type="module" src="v2/app.js?v=21"></script>
 </body>
 </html>

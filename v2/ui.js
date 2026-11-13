@@ -30,6 +30,11 @@
     box.querySelectorAll(".tab").forEach(p => p.classList.toggle("on", p.dataset.pane === b.dataset.tab));
   }));
 
+  // Кнопки Наверх / Вниз: сразу в самый верх или в самый низ страницы
+  document.querySelectorAll("[data-jump]").forEach(b => b.addEventListener("click", () => {
+    scrollTo({ top: b.dataset.jump === "top" ? 0 : document.documentElement.scrollHeight, behavior: "smooth" });
+  }));
+
   // Опыт: по клику раскрывается описание
   document.querySelectorAll(".job").forEach(b => b.addEventListener("click", () => b.parentElement.classList.toggle("open")));
 

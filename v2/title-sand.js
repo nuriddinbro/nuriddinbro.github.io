@@ -1,7 +1,7 @@
 // Песчинки на заголовке: с букв понемногу "сдувает" крошечные песчинки,
 // а при наведении курсора на заголовок рядом с ним их становится больше. Текст остается читаемым.
 (function () {
-  if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  if (matchMedia("(prefers-reduced-motion: reduce)").matches || matchMedia("(pointer: coarse)").matches) return; // на телефоне не используем
   const title = document.querySelector(".title");
   if (!title) return;
 
