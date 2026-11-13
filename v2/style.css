@@ -55,7 +55,7 @@ main { position: relative; z-index: 1; }
 @keyframes tip { 50% { transform: translateY(4px); } }
 
 /* ===== Экраны ===== */
-.scene { display: flex; align-items: center; padding: 15vh 6vw; } /* одинаковые ровные промежутки между всеми разделами */
+.scene { display: flex; align-items: center; padding: 15vh max(6vw, 84px); } /* одинаковые ровные промежутки между всеми разделами */
 #s0 { min-height: 100vh; min-height: 100svh; padding-top: 110px; }
 #s5 { min-height: 90vh; }
 .scene.right { justify-content: flex-end; }
@@ -248,12 +248,19 @@ html.cur-on, html.cur-on a, html.cur-on button { cursor: none; }
 @keyframes hintFade { 85% { opacity: 1; } to { opacity: 0; } }
 @media (max-width: 860px) { .snd-hint { top: 58px; right: 14px; } }
 
-/* Кнопки Наверх / Вниз */
-.jump { margin-left: auto; display: flex; gap: 6px; pointer-events: auto; }
-.jump-btn { border: 1px solid var(--line); background: rgba(255,255,255,.45); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); padding: 8px 12px; cursor: pointer; font: 600 10px var(--mono); letter-spacing: .14em; text-transform: uppercase; color: var(--ink); transition: background .25s, color .25s; }
+/* Кнопки Наверх / Вниз: круглые стрелки у самого правого края (там нет контента - ничего не пересекается) */
+.jump { position: fixed; right: 16px; bottom: 84px; z-index: 25; display: flex; flex-direction: column; gap: 8px; pointer-events: auto; }
+.jump-btn {
+  position: relative; width: 40px; height: 40px; border-radius: 50%; padding: 0; display: grid; place-items: center;
+  border: 1px solid var(--line); background: rgba(255,255,255,.7); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+  cursor: pointer; font: 600 14px var(--mono); color: var(--ink); box-shadow: 0 6px 20px rgba(40,60,80,.12);
+  transition: background .25s, color .25s, opacity .35s, transform .35s;
+}
+.jump-btn span { position: absolute; right: calc(100% + 10px); top: 50%; transform: translateY(-50%); white-space: nowrap; font: 600 10px var(--mono); letter-spacing: .12em; text-transform: uppercase; background: rgba(255,255,255,.85); padding: 5px 8px; border: 1px solid var(--line); opacity: 0; pointer-events: none; transition: opacity .2s; }
 .jump-btn:hover { background: var(--ink); color: #fff; }
-.jump-btn { transition: background .25s, color .25s, opacity .35s, transform .35s; }
-.jump-btn.off { opacity: 0; transform: translateY(6px); pointer-events: none; }
+.jump-btn:hover span { opacity: 1; color: var(--ink); }
+.jump-btn.off { opacity: 0; transform: scale(.8); pointer-events: none; }
+@media (max-width: 860px) { .jump { right: 10px; bottom: 70px; } .jump-btn { width: 36px; height: 36px; } .jump-btn span { display: none; } }
 
 /* Кнопка звука */
 .snd { display: inline-flex; align-items: center; gap: 8px; border: 1px solid var(--line); background: transparent; cursor: pointer; padding: 7px 10px; font: 600 10px var(--mono); letter-spacing: .12em; color: var(--muted); }
