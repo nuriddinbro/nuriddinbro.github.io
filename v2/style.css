@@ -149,7 +149,7 @@ main { position: relative; z-index: 1; }
 .tl-y { position: absolute; top: 48px; left: var(--x); transform: translateX(-50%); font: 500 10px/1 var(--mono); color: var(--muted); white-space: nowrap; }
 .tl-y::before { content: ""; position: absolute; left: 50%; top: -14px; width: 1px; height: 6px; background: var(--line); }
 .tl-y.first { transform: none; } .tl-y.first::before { left: 0; }
-.tl-y.now { left: auto; right: 0; transform: none; color: var(--accent); font-weight: 600; } .tl-y.now::before { left: auto; right: 0; }
+.tl-y.tl-now { left: auto; right: 0; transform: none; color: var(--accent); font-weight: 600; } .tl-y.tl-now::before { left: auto; right: 0; }
 .tl-card { margin-top: 6px; padding: 16px 18px; border: 1px solid var(--line); background: rgba(255,255,255,.4); min-height: 150px; }
 .tl-card.swap > * { animation: tlIn .45s ease both; }
 @keyframes tlIn { from { opacity: 0; transform: translateY(8px); } }
