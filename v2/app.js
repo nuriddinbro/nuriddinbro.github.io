@@ -149,9 +149,9 @@ function init() {
       float m = uMix;
       vec3 shape = aF0 * uW[0] + aF1 * uW[1] + aF2 * uW[2] + aF3 * uW[3] + aF4 * uW[4] + aF5 * uW[5];
       vec3 p = shape;
-      float bump = 4.0 * m * (1.0 - m);
+      float bump = pow(sin(m * 3.14159), 2.0);
       vec3 n3 = vec3(sin(uTime * .7 + aSeed * 31.0), cos(uTime * .6 + aSeed * 17.0), sin(uTime * .5 + aSeed * 11.0));
-      p += n3 * (0.002 + bump * (0.35 + aSeed * .9)) + normalize(p + vec3(.0001)) * bump * (.35 + aSeed * .6);
+      p += n3 * (0.002 + bump * (0.22 + aSeed * .5)) + normalize(p + vec3(.0001)) * bump * (.2 + aSeed * .35);
       // ветер: легкие песчинки срываются и тянутся шлейфом
       float w = uWind * smoothstep(.3, 1.0, aSeed);
       p += uWindDir * w * (0.5 + aSeed * 1.8) + n3 * w * .3;
@@ -160,13 +160,13 @@ function init() {
       // курсор: песчинки расступаются
       // расстояние считаем "как на экране" (вдоль взгляда не учитываем) - курсор достает и до середины фигуры
       vec3 dm = p - uMouse; dm -= dot(dm, uView) * uView; float dd = length(dm);
-      p += normalize(dm + vec3(.0001)) * smoothstep(.6, .0, dd) * .22 * uHover;
+      p += normalize(dm + vec3(.0001)) * pow(smoothstep(.7, .0, dd), 1.6) * .14 * uHover;
       // след курсора: песчинки вдоль пути разлетаются и плавно оседают
       for (int k = 0; k < 8; k++) {
         vec4 tp = uTrail[k];
         vec3 dv = p - tp.xyz; dv -= dot(dv, uView) * uView; float dk = length(dv);
-        float kk = tp.w * smoothstep(.6, .0, dk);
-        p += normalize(dv + vec3(.0001)) * kk * .55 + n3 * kk * .35 - uView * kk * .35;
+        float kk = tp.w * pow(smoothstep(.8, .0, dk), 1.6);
+        p += normalize(dv + vec3(.0001)) * kk * .34 + n3 * kk * .18 - uView * kk * .22;
       }
       // появление: песок слетается из облака
       p = mix(aDir * (4.0 + aSeed * 5.0), p, uIntro);
@@ -298,7 +298,7 @@ function init() {
   }, { passive: true });
   const overUI = el => el && el.closest && el.closest("a, button, .panel, .hud, .intro > *, input");
   const hitCrystal = () => { ray.setFromCamera(ndc, camera); crystal.getWorldPosition(wp); return ray.ray.distanceToPoint(wp) < 1.75 * crystal.scale.x; };
-  const boom = () => { exV += 5.5; document.dispatchEvent(new CustomEvent("crystal")); };
+  const boom = () => { exV += 3.6; document.dispatchEvent(new CustomEvent("crystal")); };
   addEventListener("pointerdown", e => { if (!overUI(e.target) && hover) boom(); });
   addEventListener("touchend", e => {
     const tch = e.changedTouches[0]; if (!tch || overUI(e.target)) return;
@@ -309,7 +309,8 @@ function init() {
   // ---------- Цикл ----------
   const clock = new THREE.Clock();
   let prog = progress(), intro = 0, wind = 0, lastProg = prog, trI = 0;
-  const sm = x => x * x * (3 - 2 * x);
+  const trAge = new Array(8).fill(99);
+  const sm = x => x * x * x * (x * (x * 6 - 15) + 10); // очень плавная кривая (без рывков в начале и в конце)
   const invQ = new THREE.Quaternion(), wdir = new THREE.Vector3();
   const dbg = new URLSearchParams(location.search);
 
@@ -317,7 +318,7 @@ function init() {
     const dt = Math.min(clock.getDelta(), .05), t = clock.elapsedTime;
     const dbgAt = dbg.has("at");
     intro = dbgAt ? 1 : Math.min(1, intro + dt * .4);
-    prog = dbgAt ? +dbg.get("at") : prog + (progress() - prog) * Math.min(1, dt * 3.5);
+    prog = dbgAt ? +dbg.get("at") : prog + (progress() - prog) * Math.min(1, dt * 2.2);
     mouse.x += (mouse.tx - mouse.x) * .05; mouse.y += (mouse.ty - mouse.y) * .05;
 
     // какая пара форм и насколько перетекла
@@ -330,7 +331,7 @@ function init() {
 
     // ветер от скорости прокрутки: песок срывается шлейфом
     const vel = dt > 0 ? (prog - lastProg) / dt : 0; lastProg = prog;
-    wind += (Math.min(1.3, Math.abs(vel) * 1.6) - wind) * Math.min(1, dt * (Math.abs(vel) > .02 ? 6 : 1.6));
+    wind += (Math.min(.9, Math.abs(vel) * 1.2) - wind) * Math.min(1, dt * (Math.abs(vel) > .02 ? 2.2 : 1.1));
     U.uWind.value = reduce ? 0 : wind;
     const sideNow = side[i] + (side[i + 1] - side[i]) * f;
     wdir.set(-sideNow * .55, vel >= 0 ? 1 : -1, .25).normalize();
@@ -338,17 +339,17 @@ function init() {
     U.uWindDir.value.copy(wdir);
 
     // клик: упругая "пружина" возвращает песок на место
-    exV += (-ex * 30 - exV * 5) * dt; ex = Math.max(-.08, ex + exV * dt);
+    exV += (-ex * 18 - exV * 8) * dt; ex = Math.max(0, ex + exV * dt);
     U.uEx.value = ex;
 
     // курсор над кристаллом: песчинки расступаются вокруг точки курсора
     const h = hitCrystal();
     if (h !== hover) { hover = h; document.dispatchEvent(new CustomEvent("crystalhover", { detail: h })); }
-    hoverAmt += ((hover ? 1 : 0) - hoverAmt) * .1;
+    hoverAmt += ((hover ? 1 : 0) - hoverAmt) * Math.min(1, dt * 2.5);
     U.uHover.value = hoverAmt;
     // след курсора по шару: новые точки, старые плавно "гаснут"
     const tr = U.uTrail.value;
-    for (const q of tr) q.w = Math.max(0, q.w - dt * .85);
+    for (let k = 0; k < 8; k++) { trAge[k] += dt; const ag = trAge[k]; tr[k].w = ag < .28 ? sm(ag / .28) : Math.max(0, 1 - sm(Math.min(1, (ag - .28) / 1.9))); }
     crystal.getWorldPosition(wp);
     plane.setFromNormalAndCoplanarPoint(camera.getWorldDirection(hitP).negate(), wp);
     { const vd = camera.getWorldDirection(new THREE.Vector3()); invQ.copy(crystal.quaternion).invert(); U.uView.value.copy(vd.applyQuaternion(invQ)).normalize(); }
@@ -356,7 +357,7 @@ function init() {
       const loc = crystal.worldToLocal(hitP.clone());
       U.uMouse.value.copy(loc);
       const lastT = tr[trI];
-      if (hover && Math.hypot(loc.x - lastT.x, loc.y - lastT.y, loc.z - lastT.z) > .12) { trI = (trI + 1) % 8; tr[trI].set(loc.x, loc.y, loc.z, 1); }
+      if (hover && Math.hypot(loc.x - lastT.x, loc.y - lastT.y, loc.z - lastT.z) > .16) { trI = (trI + 1) % 8; tr[trI].set(loc.x, loc.y, loc.z, 0); trAge[trI] = 0; }
     }
 
     // положение и вращение
