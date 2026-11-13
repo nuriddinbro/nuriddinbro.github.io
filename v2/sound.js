@@ -160,7 +160,23 @@
     setTimeout(() => chime({ detail: 0 }), 650);
   }
 
-  document.addEventListener("section", chime);
+  // Смена раздела: тихий мягкий шорох пересыпающегося песка (вместо "дзинь")
+  let lastSwish = 0;
+  function swish() {
+    if (!on || !ctx || ctx.state !== "running") return;
+    const t = ctx.currentTime; if (t - lastSwish < 1.2) return; lastSwish = t;
+    const len = .9, buf = ctx.createBuffer(1, ctx.sampleRate * len, ctx.sampleRate), d = buf.getChannelData(0);
+    for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * (Math.random() < .35 ? 1 : .35); // "зернистый" шум
+    const src = ctx.createBufferSource(); src.buffer = buf;
+    const bp = ctx.createBiquadFilter(); bp.type = "bandpass"; bp.Q.value = .8;
+    bp.frequency.setValueAtTime(2600, t); bp.frequency.exponentialRampToValueAtTime(900, t + len);
+    const lp = ctx.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.value = 4000;
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(.012, t + .25); g.gain.linearRampToValueAtTime(0, t + len);
+    src.connect(bp); bp.connect(lp); lp.connect(g); g.connect(master);
+    src.start(t); src.stop(t + len);
+  }
+  document.addEventListener("section", swish);
   document.addEventListener("crystal", shatter);
   document.querySelectorAll("a, button, .chips li").forEach(el => el.addEventListener("mouseenter", tick));
 })();

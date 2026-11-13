@@ -133,7 +133,7 @@ function init() {
     uTime: { value: 0 }, uMix: { value: 0 }, uIntro: { value: reduce ? 1 : 0 },
     uWind: { value: 0 }, uWindDir: { value: new THREE.Vector3(0, 1, 0) },
     uEx: { value: 0 }, uMouse: { value: new THREE.Vector3(99, 99, 99) }, uHover: { value: 0 },
-    uW: { value: [1, 0, 0, 0, 0, 0] },
+    uW: { value: [1, 0, 0, 0, 0, 0] }, uView: { value: new THREE.Vector3(0, 0, -1) },
     uTrail: { value: Array.from({ length: 8 }, () => new THREE.Vector4(99, 99, 99, 0)) }
   };
   const mat = new THREE.MeshStandardMaterial({ color: "#a9bccb", roughness: .78, metalness: 0, envMapIntensity: .45 });
@@ -142,7 +142,7 @@ function init() {
     sh.vertexShader = `
       attribute vec3 aF0; attribute vec3 aF1; attribute vec3 aF2; attribute vec3 aF3; attribute vec3 aF4; attribute vec3 aF5;
       attribute float aSeed; attribute vec3 aDir; attribute float aTint;
-      uniform float uW[6]; uniform vec4 uTrail[8];
+      uniform float uW[6]; uniform vec4 uTrail[8]; uniform vec3 uView;
       uniform float uTime, uMix, uIntro, uWind, uEx, uHover; uniform vec3 uWindDir, uMouse;
       varying float vShade; varying float vTint;
     ` + sh.vertexShader.replace("#include <begin_vertex>", `
@@ -158,14 +158,15 @@ function init() {
       // клик: песок разлетается
       p += normalize(p + vec3(.0001)) * uEx * (.4 + aSeed * .9) + n3 * uEx * .3;
       // курсор: песчинки расступаются
-      vec3 dm = p - uMouse; float dd = length(dm);
+      // расстояние считаем "как на экране" (вдоль взгляда не учитываем) - курсор достает и до середины фигуры
+      vec3 dm = p - uMouse; dm -= dot(dm, uView) * uView; float dd = length(dm);
       p += normalize(dm + vec3(.0001)) * smoothstep(.6, .0, dd) * .22 * uHover;
       // след курсора: песчинки вдоль пути разлетаются и плавно оседают
       for (int k = 0; k < 8; k++) {
         vec4 tp = uTrail[k];
-        vec3 dv = p - tp.xyz; float dk = length(dv);
+        vec3 dv = p - tp.xyz; dv -= dot(dv, uView) * uView; float dk = length(dv);
         float kk = tp.w * smoothstep(.6, .0, dk);
-        p += normalize(dv + vec3(.0001)) * kk * .55 + n3 * kk * .4;
+        p += normalize(dv + vec3(.0001)) * kk * .55 + n3 * kk * .35 - uView * kk * .35;
       }
       // появление: песок слетается из облака
       p = mix(aDir * (4.0 + aSeed * 5.0), p, uIntro);
@@ -350,6 +351,7 @@ function init() {
     for (const q of tr) q.w = Math.max(0, q.w - dt * .85);
     crystal.getWorldPosition(wp);
     plane.setFromNormalAndCoplanarPoint(camera.getWorldDirection(hitP).negate(), wp);
+    { const vd = camera.getWorldDirection(new THREE.Vector3()); invQ.copy(crystal.quaternion).invert(); U.uView.value.copy(vd.applyQuaternion(invQ)).normalize(); }
     if (ray.ray.intersectPlane(plane, hitP)) {
       const loc = crystal.worldToLocal(hitP.clone());
       U.uMouse.value.copy(loc);
