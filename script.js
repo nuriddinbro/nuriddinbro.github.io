@@ -22,6 +22,7 @@ const EN = {
   ch5_t: "Contact", ch5_s: "The next step is yours",
   hud_scroll: "scroll",
   jump_up: "Top",
+  tl_now: "now",
   jump_down: "Bottom",
   music_by: "Music",
   snd_hint: "click anywhere to turn on music",

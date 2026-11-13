@@ -35,6 +35,29 @@
     scrollTo({ top: b.dataset.jump === "top" ? 0 : document.documentElement.scrollHeight, behavior: "smooth" });
   }));
 
+  // Опыт: линия времени. Нажал на отрезок - внизу должность и описание. По умолчанию - текущая работа.
+  const segs = [...document.querySelectorAll(".tl-seg")];
+  const card = document.querySelector(".tl-card");
+  let cur = "1";
+  function showJob(n, anim) {
+    cur = n;
+    const s = document.querySelector(`.tl-src [data-src="${n}"]`).children;
+    card.querySelector(".tl-when").textContent = s[0].textContent;
+    card.querySelector(".tl-co").textContent = s[1].textContent;
+    card.querySelector(".tl-role").textContent = s[2].textContent;
+    card.querySelector(".tl-d").textContent = s[3].textContent;
+    segs.forEach(b => b.classList.toggle("on", b.dataset.job === n));
+    if (anim) { card.classList.remove("swap"); void card.offsetWidth; card.classList.add("swap"); }
+  }
+  if (card) {
+    segs.forEach(b => b.addEventListener("click", () => showJob(b.dataset.job, true)));
+    // стрелки: 1 - самая свежая работа, 6 - самая ранняя
+    card.querySelector(".tl-prev").addEventListener("click", () => showJob(String(Math.min(6, +cur + 1)), true));
+    card.querySelector(".tl-next").addEventListener("click", () => showJob(String(Math.max(1, +cur - 1)), true));
+    document.addEventListener("langchange", () => showJob(cur, false));
+    showJob("1", false);
+  }
+
   // Опыт: по клику раскрывается описание
   document.querySelectorAll(".job").forEach(b => b.addEventListener("click", () => b.parentElement.classList.toggle("open")));
 

@@ -128,9 +128,36 @@ main { position: relative; z-index: 1; }
 .jobs li::after { content: "+"; position: absolute; right: 4px; top: 12px; font: 400 16px var(--mono); color: var(--muted); transition: transform .3s; }
 .jobs li.open::after { transform: rotate(45deg); }
 .job::after { display: none; }
-.j-d { display: grid; grid-template-rows: 0fr; font-size: 13.5px; color: var(--ink-2); transition: grid-template-rows .4s ease; }
+.j-d { font-size: 13.5px; color: var(--ink-2); }
 .j-d { overflow: hidden; max-height: 0; transition: max-height .45s ease, padding .45s ease; padding: 0 0 0 164px; }
 .jobs li.open .j-d { max-height: 160px; padding-bottom: 12px; }
+
+/* Опыт: горизонтальная линия времени */
+.tl { margin-top: 8px; }
+.tl-axis { position: relative; height: 74px; margin: 6px 4px 0; }
+.tl-line { position: absolute; left: 0; right: 0; top: 30px; height: 1px; background: var(--line); }
+.tl-seg { position: absolute; top: 24px; left: var(--s); width: max(calc(var(--e) - var(--s)), 12px); height: 13px; padding: 0; border: 0; background: none; cursor: pointer; }
+.tl-seg i { position: absolute; left: 0; right: 0; top: 4px; height: 5px; border-radius: 3px; background: rgba(20,32,43,.28); transition: background .3s, height .3s, top .3s; }
+.tl-seg::before { content: ""; position: absolute; left: -4px; top: 2px; width: 9px; height: 9px; border-radius: 50%; background: #fff; border: 1.5px solid var(--ink-2); transition: background .3s, border-color .3s, transform .3s; }
+.tl-seg em { position: absolute; bottom: calc(100% + 6px); left: 50%; transform: translateX(-50%); white-space: nowrap; font: 600 9.5px var(--mono); font-style: normal; letter-spacing: .06em; color: var(--ink); background: rgba(255,255,255,.9); border: 1px solid var(--line); padding: 3px 6px; opacity: 0; pointer-events: none; transition: opacity .2s; }
+.tl-seg:hover em, .tl-seg:focus-visible em { opacity: 1; }
+.tl-seg:hover i { background: rgba(28,134,181,.55); }
+.tl-seg.on i { background: var(--accent); top: 3px; height: 7px; }
+.tl-seg.on::before { background: var(--accent); border-color: var(--accent); transform: scale(1.25); box-shadow: 0 0 0 4px rgba(28,134,181,.15); }
+.tl-y { position: absolute; top: 48px; left: var(--x); transform: translateX(-50%); font: 500 10px var(--mono); color: var(--muted); }
+.tl-y:first-of-type { transform: none; }
+.tl-y.now { transform: translateX(-80%); color: var(--accent); font-weight: 600; }
+.tl-card { margin-top: 6px; padding: 16px 18px; border: 1px solid var(--line); background: rgba(255,255,255,.4); min-height: 150px; }
+.tl-card.swap > * { animation: tlIn .45s ease both; }
+@keyframes tlIn { from { opacity: 0; transform: translateY(8px); } }
+.tl-head { display: flex; justify-content: space-between; align-items: center; }
+.tl-when { font: 600 10.5px var(--mono); letter-spacing: .08em; color: var(--accent); }
+.tl-nav { display: flex; gap: 6px; }
+.tl-nav button { width: 30px; height: 30px; border: 1px solid var(--line); background: rgba(255,255,255,.6); cursor: pointer; font: 600 13px var(--mono); color: var(--ink); }
+.tl-nav button:hover { background: var(--ink); color: #fff; }
+.tl-co { font: 600 19px var(--font); margin: 6px 0 2px; }
+.tl-role { font-size: 14px; color: var(--ink-2); margin-bottom: 8px; }
+.tl-d { font-size: 13.5px; color: var(--ink-2); line-height: 1.5; }
 
 /* Портфолио: вкладки */
 .tabs { display: flex; gap: 4px; margin-bottom: 16px; border-bottom: 1px solid var(--line); }
